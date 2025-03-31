@@ -79,19 +79,41 @@ function sendMailMerge(templateId, senderName) {
   var headers = data.headers.map(function(header) { return header.toLowerCase(); });
   var rows = data.rows;
   var sent = 0;
+  var warnings = [];
   
-  rows.forEach(function(row) {
+  rows.forEach(function(row, rowIndex) {
     try {
       var personalizedBody = template.body;
       var personalizedSubject = template.subject;
       
       // Replace all variables in both subject and body
       headers.forEach(function(header, index) {
-        var value = row[index] || '';
+        // Convert value to string, but handle 0 properly
+        var value = row[index];
+        // Check if value is numeric (including 0) or any other type
+        var stringValue = (value === 0 || value) ? String(value) : '';
+        
+        // Check for oversized values
+        if (stringValue.length > 50000) {
+          warnings.push(`Warning: Value for ${header} in row ${rowIndex + 2} exceeds 50,000 characters and may be truncated`);
+          stringValue = stringValue.substring(0, 50000) + '...';
+        }
+        
         var regex = new RegExp('{{\\s*' + header + '\\s*}}', 'gi');
-        personalizedBody = personalizedBody.replace(regex, value);
-        personalizedSubject = personalizedSubject.replace(regex, value);
+        personalizedBody = personalizedBody.replace(regex, stringValue);
+        personalizedSubject = personalizedSubject.replace(regex, stringValue);
       });
+      
+      // Check final email size (rough estimate)
+      if (personalizedBody.length > 10000000) { // 10MB limit
+        warnings.push(`Warning: Email for row ${rowIndex + 2} exceeds recommended size and may not send properly`);
+      }
+      
+      // Limit subject line to 998 characters (email standard)
+      if (personalizedSubject.length > 998) {
+        warnings.push(`Warning: Subject line for row ${rowIndex + 2} exceeds 998 characters and will be truncated`);
+        personalizedSubject = personalizedSubject.substring(0, 998);
+      }
       
       // Get email from the second column (maintaining existing behavior)
       var email = row[1];
@@ -108,10 +130,16 @@ function sendMailMerge(templateId, senderName) {
       sent++;
     } catch (error) {
       Logger.log('Failed to send email to ' + row[1] + ': ' + error.toString());
+      warnings.push(`Error sending to ${row[1]}: ${error.toString()}`);
     }
   });
   
-  return sent + ' emails sent successfully';
+  // Return success message with any warnings
+  var message = sent + ' emails sent successfully';
+  if (warnings.length > 0) {
+    message += '\n\n' + warnings.join('\n');
+  }
+  return message;
 }
 
 function removeRecipient(index) {
