@@ -20,7 +20,12 @@ function showSidebar() {
     <div style="padding: 10px;">
       <h2>Mail Merge</h2>
       
-      <button onclick="loadData()" style="margin-bottom: 10px;">Load Data</button>
+      <div style="margin-bottom: 20px;">
+        <label for="senderName" style="display: block; margin-bottom: 5px;">Your Name:</label>
+        <input type="text" id="senderName" style="width: 100%; padding: 5px; margin-bottom: 10px;" placeholder="Enter your name">
+      </div>
+      
+      <button onclick="loadData()" style="margin-bottom: 10px; background-color: #4CAF50; color: white; padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer;">Load Data</button>
       <div id="status"></div>
       
       <div id="recipientList" style="display: none; margin-top: 20px;">
@@ -28,7 +33,7 @@ function showSidebar() {
         <div id="recipients"></div>
         
         <h3 style="margin-top: 20px;">Select Template:</h3>
-        <select id="templateSelect" style="margin-bottom: 10px; width: 100%;">
+        <select id="templateSelect" style="margin-bottom: 10px; width: 100%; padding: 5px;">
           <option value="">Loading drafts...</option>
         </select>
         
@@ -77,8 +82,15 @@ function showSidebar() {
 
       function sendEmails() {
         var templateId = document.getElementById('templateSelect').value;
+        var senderName = document.getElementById('senderName').value.trim();
+        
         if (!templateId) {
           alert('Please select a template first');
+          return;
+        }
+        
+        if (!senderName) {
+          alert('Please enter your name');
           return;
         }
         
@@ -94,7 +106,7 @@ function showSidebar() {
           .withFailureHandler(function(error) {
             document.getElementById('status').innerHTML = 'Error: ' + error;
           })
-          .sendMailMerge(templateId);
+          .sendMailMerge(templateId, senderName);
       }
     </script>
   `)
@@ -130,7 +142,7 @@ function getDraftTemplates() {
   }
 }
 
-function sendMailMerge(templateId) {
+function sendMailMerge(templateId, senderName) {
   var draft = GmailApp.getDraft(templateId);
   if (!draft) {
     throw new Error('Selected draft template not found');
@@ -160,7 +172,7 @@ function sendMailMerge(templateId) {
         '',  // Plain text body (empty since we're sending HTML)
         {
           htmlBody: personalizedBody,
-          name: 'Mail Merge'
+          name: senderName  // Use the provided sender name
         }
       );
       sent++;
