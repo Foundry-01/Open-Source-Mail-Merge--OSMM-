@@ -17,42 +17,143 @@ function doGet() {
  */
 function showSidebar() {
   var html = HtmlService.createHtmlOutput(`
-    <div style="padding: 10px;">
+    <style>
+      body {
+        font-family: 'Google Sans', Arial, sans-serif;
+        color: #202124;
+        margin: 0;
+        padding: 0;
+      }
+      .container {
+        padding: 16px;
+      }
+      h2 {
+        color: #1a73e8;
+        font-size: 20px;
+        margin: 0 0 20px 0;
+        padding-bottom: 8px;
+        border-bottom: 2px solid #e8eaed;
+      }
+      h3 {
+        color: #202124;
+        font-size: 14px;
+        margin: 24px 0 12px 0;
+      }
+      .input-group {
+        margin-bottom: 24px;
+        background: #f8f9fa;
+        padding: 16px;
+        border-radius: 8px;
+      }
+      label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+        color: #202124;
+      }
+      input, select {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #dadce0;
+        border-radius: 4px;
+        font-size: 14px;
+        margin-bottom: 8px;
+      }
+      input:focus, select:focus {
+        outline: none;
+        border-color: #1a73e8;
+      }
+      .helper-text {
+        font-size: 12px;
+        color: #5f6368;
+        margin-top: 4px;
+        line-height: 1.4;
+      }
+      .button {
+        background-color: #1a73e8;
+        color: white;
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        transition: background-color 0.2s;
+      }
+      .button:hover {
+        background-color: #1557b0;
+      }
+      .button.send {
+        background-color: #188038;
+        width: 100%;
+        padding: 12px;
+        margin-top: 16px;
+      }
+      .button.send:hover {
+        background-color: #137333;
+      }
+      #status {
+        margin: 12px 0;
+        padding: 8px;
+        border-radius: 4px;
+        font-size: 14px;
+      }
+      .success {
+        background-color: #e6f4ea;
+        color: #137333;
+      }
+      .error {
+        background-color: #fce8e6;
+        color: #c5221f;
+      }
+      .recipient {
+        padding: 8px;
+        margin: 4px 0;
+        background: #f8f9fa;
+        border-radius: 4px;
+        font-size: 14px;
+      }
+    </style>
+    <div class="container">
       <h2>Mail Merge</h2>
       
-      <div style="margin-bottom: 20px;">
-        <label for="senderName" style="display: block; margin-bottom: 5px;">Your Name:</label>
-        <input type="text" id="senderName" style="width: 100%; padding: 5px; margin-bottom: 10px;" placeholder="Enter your name">
+      <div class="input-group">
+        <label for="senderName">Your Name</label>
+        <input type="text" id="senderName" placeholder="Enter your name">
+        <div class="helper-text">
+          This only changes how your name appears in recipients' inboxes.<br>
+          Make sure to include your signature in the email draft itself.
+        </div>
       </div>
       
-      <button onclick="loadData()" style="margin-bottom: 10px; background-color: #4CAF50; color: white; padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer;">Load Data</button>
+      <button onclick="loadData()" class="button">Load Recipients & Templates</button>
       <div id="status"></div>
       
-      <div id="recipientList" style="display: none; margin-top: 20px;">
-        <h3>Recipients:</h3>
+      <div id="recipientList" style="display: none;">
+        <h3>Recipients</h3>
         <div id="recipients"></div>
         
-        <h3 style="margin-top: 20px;">Select Template:</h3>
-        <select id="templateSelect" style="margin-bottom: 10px; width: 100%; padding: 5px;">
+        <h3>Email Template</h3>
+        <select id="templateSelect">
           <option value="">Loading drafts...</option>
         </select>
         
-        <button onclick="sendEmails()" style="margin-top: 10px; background-color: #4CAF50; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer;">Send Emails</button>
+        <button onclick="sendEmails()" class="button send">Send Emails</button>
       </div>
     </div>
 
     <script>
       function loadData() {
-        document.getElementById('status').innerHTML = 'Loading...';
+        document.getElementById('status').innerHTML = '<div class="loading">Loading...</div>';
         google.script.run
           .withSuccessHandler(function(data) {
-            document.getElementById('status').innerHTML = 'Success!';
+            document.getElementById('status').innerHTML = '<div class="success">✓ Data loaded successfully!</div>';
             document.getElementById('recipientList').style.display = 'block';
             
             // Display recipients
             var recipientHtml = '';
             data.rows.forEach(function(row) {
-              recipientHtml += '<div style="margin: 5px 0;">' + row[0] + ' (' + row[1] + ')</div>';
+              recipientHtml += '<div class="recipient">' + row[0] + ' (' + row[1] + ')</div>';
             });
             document.getElementById('recipients').innerHTML = recipientHtml;
             
@@ -66,7 +167,7 @@ function showSidebar() {
         google.script.run
           .withSuccessHandler(function(drafts) {
             var select = document.getElementById('templateSelect');
-            select.innerHTML = '<option value="">Select a draft template...</option>';
+            select.innerHTML = '<option value="">Select an email template...</option>';
             drafts.forEach(function(draft) {
               var option = document.createElement('option');
               option.value = draft.id;
@@ -75,7 +176,7 @@ function showSidebar() {
             });
           })
           .withFailureHandler(function(error) {
-            document.getElementById('status').innerHTML = 'Error loading drafts: ' + error;
+            document.getElementById('status').innerHTML = '<div class="error">Error loading drafts: ' + error + '</div>';
           })
           .getDraftTemplates();
       }
@@ -85,7 +186,7 @@ function showSidebar() {
         var senderName = document.getElementById('senderName').value.trim();
         
         if (!templateId) {
-          alert('Please select a template first');
+          alert('Please select an email template first');
           return;
         }
         
@@ -98,13 +199,13 @@ function showSidebar() {
           return;
         }
         
-        document.getElementById('status').innerHTML = 'Sending emails...';
+        document.getElementById('status').innerHTML = '<div class="loading">Sending emails...</div>';
         google.script.run
-          .withSuccessHandler(function() {
-            document.getElementById('status').innerHTML = 'Emails sent successfully!';
+          .withSuccessHandler(function(result) {
+            document.getElementById('status').innerHTML = '<div class="success">✓ ' + result + '</div>';
           })
           .withFailureHandler(function(error) {
-            document.getElementById('status').innerHTML = 'Error: ' + error;
+            document.getElementById('status').innerHTML = '<div class="error">Error: ' + error + '</div>';
           })
           .sendMailMerge(templateId, senderName);
       }
@@ -130,7 +231,8 @@ function getSheetData() {
 function getDraftTemplates() {
   try {
     var drafts = GmailApp.getDrafts();
-    return drafts.map(function(draft) {
+    // Get only the 5 most recent drafts (drafts are already sorted by date, most recent first)
+    return drafts.slice(0, 5).map(function(draft) {
       var message = draft.getMessage();
       return {
         id: draft.getId(),
