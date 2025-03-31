@@ -46,7 +46,7 @@ A free and simple mail merge tool that works directly with Google Sheets and Gma
      - Each row represents one recipient
 
 2. **Send Your Mail Merge**
-   - In your Google Sheet, click the "📧 Mail Merge" menu
+   - In your Google Sheet, click the "OSMM" menu
    - Click "Start Mail Merge"
    - In the sidebar that appears, click "Load Data"
    - Verify your recipients are listed correctly
@@ -84,13 +84,3 @@ If the menu doesn't appear:
   - Send emails on your behalf
   - Read and modify the current spreadsheet
 
-## Support
-
-This is an open-source project. For support:
-- Check the troubleshooting section
-- Review the code on GitHub
-- Submit issues through the GitHub repository
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details. 
