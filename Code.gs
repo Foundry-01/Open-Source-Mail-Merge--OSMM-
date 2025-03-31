@@ -1,9 +1,10 @@
 /**
  * Creates a menu entry in the Google Sheets UI when the document is opened.
+ * This function runs automatically when the spreadsheet is opened.
  */
-function onOpen() {
-  SpreadsheetApp.getUi()
-    .createMenu('OSMM')
+function onOpen(e) {
+  var ui = SpreadsheetApp.getUi();
+  ui.createMenu('OSMM')
     .addItem('Start Mail Merge', 'showSidebar')
     .addToUi();
 }
