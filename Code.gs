@@ -3,7 +3,7 @@
  */
 function onOpen() {
   SpreadsheetApp.getUi()
-    .createMenu('📧 Mail Merge')
+    .createMenu('OSMM')
     .addItem('Start Mail Merge', 'showSidebar')
     .addToUi();
 }
@@ -23,137 +23,262 @@ function showSidebar() {
         color: #202124;
         margin: 0;
         padding: 0;
+        background: #fff;
       }
       .container {
-        padding: 16px;
+        padding: 20px;
+      }
+      .title {
+        display: flex;
+        align-items: center;
+        margin-bottom: 24px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #dadce0;
+      }
+      .title-icon {
+        width: 20px;
+        height: 20px;
+        margin-right: 12px;
+        background: #e8f0fe;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
       h2 {
-        color: #1a73e8;
-        font-size: 20px;
-        margin: 0 0 20px 0;
-        padding-bottom: 8px;
-        border-bottom: 2px solid #e8eaed;
-      }
-      h3 {
         color: #202124;
-        font-size: 14px;
-        margin: 24px 0 12px 0;
+        font-size: 16px;
+        margin: 0;
+        font-weight: 500;
       }
-      .input-group {
+      .input-section {
         margin-bottom: 24px;
-        background: #f8f9fa;
-        padding: 16px;
-        border-radius: 8px;
       }
       label {
         display: block;
+        font-size: 14px;
+        color: #202124;
         margin-bottom: 8px;
         font-weight: 500;
-        color: #202124;
       }
-      input, select {
+      input {
         width: 100%;
-        padding: 8px 12px;
-        border: 1px solid #dadce0;
-        border-radius: 4px;
+        padding: 8px 0;
+        border: none;
+        border-bottom: 1px solid #dadce0;
         font-size: 14px;
-        margin-bottom: 8px;
+        background: transparent;
+        margin-bottom: 4px;
       }
-      input:focus, select:focus {
+      input:focus {
         outline: none;
-        border-color: #1a73e8;
+        border-bottom-color: #1a73e8;
       }
       .helper-text {
         font-size: 12px;
         color: #5f6368;
         margin-top: 4px;
-        line-height: 1.4;
       }
-      .button {
-        background-color: #1a73e8;
-        color: white;
-        padding: 8px 16px;
+      .load-button {
+        display: flex;
+        align-items: center;
+        color: #1a73e8;
+        font-size: 14px;
+        padding: 0;
+        background: none;
         border: none;
-        border-radius: 4px;
         cursor: pointer;
+        font-weight: 500;
+      }
+      .load-button.done {
+        color: #188038;
+      }
+      .load-button .check {
+        margin-right: 8px;
+      }
+      .help-icon {
+        color: #5f6368;
+        cursor: pointer;
+        margin-left: auto;
+      }
+      .section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin: 24px 0 12px;
+      }
+      .section-title {
+        font-size: 14px;
+        color: #202124;
+        font-weight: 500;
+      }
+      .action-button {
+        color: #1a73e8;
+        background: none;
+        border: none;
         font-size: 14px;
         font-weight: 500;
-        transition: background-color 0.2s;
+        cursor: pointer;
+        padding: 0;
       }
-      .button:hover {
-        background-color: #1557b0;
-      }
-      .button.send {
-        background-color: #188038;
-        width: 100%;
-        padding: 12px;
-        margin-top: 16px;
-      }
-      .button.send:hover {
-        background-color: #137333;
-      }
-      #status {
-        margin: 12px 0;
-        padding: 8px;
-        border-radius: 4px;
-        font-size: 14px;
-      }
-      .success {
-        background-color: #e6f4ea;
-        color: #137333;
-      }
-      .error {
-        background-color: #fce8e6;
-        color: #c5221f;
+      .recipient-list {
+        margin-bottom: 24px;
       }
       .recipient {
-        padding: 8px;
-        margin: 4px 0;
-        background: #f8f9fa;
+        display: flex;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px solid #dadce0;
+      }
+      .recipient:last-child {
+        border-bottom: none;
+      }
+      .recipient-initial {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: #e8f0fe;
+        color: #1967d2;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        margin-right: 12px;
+        font-weight: 500;
+      }
+      .recipient-info {
+        flex-grow: 1;
+      }
+      .recipient-name {
+        font-size: 14px;
+        color: #202124;
+        margin-bottom: 2px;
+      }
+      .recipient-email {
+        font-size: 12px;
+        color: #5f6368;
+      }
+      .more-actions {
+        color: #5f6368;
+        padding: 4px;
+        cursor: pointer;
+      }
+      select {
+        width: 100%;
+        padding: 8px 0;
+        border: none;
+        border-bottom: 1px solid #dadce0;
+        font-size: 14px;
+        background: transparent;
+        margin-bottom: 24px;
+        color: #202124;
+        -webkit-appearance: none;
+        appearance: none;
+        background-image: url('data:image/svg+xml;charset=US-ASCII,<svg width="24" height="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z" fill="%235F6368"/></svg>');
+        background-repeat: no-repeat;
+        background-position: right center;
+      }
+      select:focus {
+        outline: none;
+        border-bottom-color: #1a73e8;
+      }
+      .send-button {
+        width: 100%;
+        background: #202124;
+        color: white;
+        border: none;
         border-radius: 4px;
+        padding: 12px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .send-button svg {
+        margin-right: 8px;
+      }
+      .send-button:hover {
+        background: #000;
+      }
+      #status {
+        margin: 8px 0;
         font-size: 14px;
       }
     </style>
     <div class="container">
-      <h2>Mail Merge</h2>
+      <div class="title">
+        <div class="title-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="#1967d2">
+            <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+          </svg>
+        </div>
+        <h2>Open Source Mail Merge</h2>
+      </div>
       
-      <div class="input-group">
+      <div class="input-section">
         <label for="senderName">Your Name</label>
         <input type="text" id="senderName" placeholder="Enter your name">
         <div class="helper-text">
-          This only changes how your name appears in recipients' inboxes.<br>
-          Make sure to include your signature in the email draft itself.
+          This name will appear in recipients' inboxes. Include your signature in the draft template.
         </div>
       </div>
       
-      <button onclick="loadData()" class="button">Load Recipients & Templates</button>
+      <button onclick="loadData()" id="loadButton" class="load-button">
+        <span id="loadText">Load Recipients & Templates</span>
+      </button>
       <div id="status"></div>
       
       <div id="recipientList" style="display: none;">
-        <h3>Recipients</h3>
-        <div id="recipients"></div>
+        <div class="section-header">
+          <span class="section-title">Recipients</span>
+          <button class="action-button">Preview</button>
+        </div>
+        <div class="recipient-list" id="recipients"></div>
         
-        <h3>Email Template</h3>
+        <div class="section-header">
+          <span class="section-title">Email Template</span>
+        </div>
         <select id="templateSelect">
           <option value="">Loading drafts...</option>
         </select>
         
-        <button onclick="sendEmails()" class="button send">Send Emails</button>
+        <button onclick="sendEmails()" class="send-button">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M3.4 20.4l17.45-7.48c.81-.35.81-1.49 0-1.84L3.4 3.6c-.66-.29-1.39.2-1.39.91L2 9.12c0 .5.37.93.87.99L17 12 2.87 13.88c-.5.07-.87.5-.87 1l.01 4.61c0 .71.73 1.2 1.39.91z"/>
+          </svg>
+          Send Emails
+        </button>
       </div>
     </div>
 
     <script>
       function loadData() {
-        document.getElementById('status').innerHTML = '<div class="loading">Loading...</div>';
+        var loadButton = document.getElementById('loadButton');
+        loadButton.disabled = true;
+        document.getElementById('status').innerHTML = '<div style="color: #1a73e8;">Loading...</div>';
+        
         google.script.run
           .withSuccessHandler(function(data) {
-            document.getElementById('status').innerHTML = '<div class="success">✓ Data loaded successfully!</div>';
+            loadButton.innerHTML = '<span class="check">✓</span> Load Recipients & Templates';
+            loadButton.classList.add('done');
             document.getElementById('recipientList').style.display = 'block';
             
             // Display recipients
             var recipientHtml = '';
             data.rows.forEach(function(row) {
-              recipientHtml += '<div class="recipient">' + row[0] + ' (' + row[1] + ')</div>';
+              var initial = row[0].charAt(0).toUpperCase();
+              recipientHtml += \`
+                <div class="recipient">
+                  <div class="recipient-initial">\${initial}</div>
+                  <div class="recipient-info">
+                    <div class="recipient-name">\${row[0]}</div>
+                    <div class="recipient-email">\${row[1]}</div>
+                  </div>
+                  <div class="more-actions">⋮</div>
+                </div>
+              \`;
             });
             document.getElementById('recipients').innerHTML = recipientHtml;
             
@@ -176,7 +301,7 @@ function showSidebar() {
             });
           })
           .withFailureHandler(function(error) {
-            document.getElementById('status').innerHTML = '<div class="error">Error loading drafts: ' + error + '</div>';
+            document.getElementById('status').innerHTML = '<div style="color: #d93025;">Error loading drafts: ' + error + '</div>';
           })
           .getDraftTemplates();
       }
@@ -199,19 +324,19 @@ function showSidebar() {
           return;
         }
         
-        document.getElementById('status').innerHTML = '<div class="loading">Sending emails...</div>';
+        document.getElementById('status').innerHTML = '<div style="color: #1a73e8;">Sending emails...</div>';
         google.script.run
           .withSuccessHandler(function(result) {
-            document.getElementById('status').innerHTML = '<div class="success">✓ ' + result + '</div>';
+            document.getElementById('status').innerHTML = '<div style="color: #188038;">' + result + '</div>';
           })
           .withFailureHandler(function(error) {
-            document.getElementById('status').innerHTML = '<div class="error">Error: ' + error + '</div>';
+            document.getElementById('status').innerHTML = '<div style="color: #d93025;">Error: ' + error + '</div>';
           })
           .sendMailMerge(templateId, senderName);
       }
     </script>
   `)
-    .setTitle('Mail Merge')
+    .setTitle('OSMM')
     .setWidth(300);
   
   SpreadsheetApp.getUi().showSidebar(html);
