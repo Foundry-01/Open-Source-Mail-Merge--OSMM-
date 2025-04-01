@@ -1,5 +1,7 @@
 # Open Source Mail Merge (OSMM)
 
+Apps Script project share link: https://script.google.com/d/1_2XrHuWGVz8DhP61xyYMA4GKceFtfSzXu_aJej8vu7Rbiw6j9OFYFeVY/edit?usp=sharing 
+
 A free and open-source mail merge add-on for Google Sheets that lets you send personalized emails using Gmail drafts as templates.
 
 ## Installation Instructions
