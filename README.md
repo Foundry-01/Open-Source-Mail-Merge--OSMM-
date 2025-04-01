@@ -1,6 +1,115 @@
 # Open Source Mail Merge (OSMM)
 
-A free and simple mail merge tool that works directly with Google Sheets and Gmail drafts. Send personalized emails to multiple recipients using Gmail draft templates.
+A free and open-source mail merge add-on for Google Sheets that lets you send personalized emails using Gmail drafts as templates.
+
+## Installation Instructions
+
+1. Create a new Google Apps Script project:
+   - Go to [script.google.com](https://script.google.com)
+   - Click "New Project"
+   - Name your project "Open Source Mail Merge"
+
+2. Enable the Apps Script Manifest:
+   - Click on the ⚙️ settings icon (Project Settings)
+   - Check "Show "appsscript.json" manifest file in editor"
+   - Click "Save"
+
+3. Add the project files:
+   - In the script editor, rename the default `Code.gs` file if it exists
+   - Create/copy these files with their exact names:
+     - `Code.gs`
+     - `Sidebar.html`
+     - `appsscript.json` (will appear after enabling in step 2)
+   - Copy the provided code into each file
+
+4. Save all files:
+   - Click the 💾 save icon or press Ctrl+S (Cmd+S on Mac)
+   - Make sure all files are saved without errors
+
+5. Run the initial setup:
+   - In the script editor, select the `onHomepage` function from the dropdown menu at the top
+   - Click the ▶️ Run button
+   - Grant the necessary permissions when prompted
+   - You might see a warning about the app not being verified - click "Advanced" and then "Go to Open Source Mail Merge (unsafe)"
+   - Click through all permission requests
+
+6. Deploy the add-on:
+   - Click "Deploy" > "New deployment"
+   - Click "Select type" > "Test deployments"
+   - In the next screen, select "Google Workspace Add-on"
+   - Select "Sheet" under "Configuration"
+   - Click "Install" and follow the prompts
+   - You'll get a confirmation that the test deployment is installed
+
+7. Use the add-on:
+   - Open any Google Sheet
+   - Refresh the page
+   - Click "Extensions" in the top menu
+   - You should see "Open Source Mail Merge" under "Development" section
+   - Click "Start" in the sidebar
+
+## Features
+
+- Send personalized emails to multiple recipients using Gmail drafts as templates
+- Dynamic variable replacement using `{{variable}}` syntax
+- Case-insensitive variable matching
+- Automatic email column detection (searches for any column containing "email address")
+- Test email functionality before sending to all recipients
+- Modern, user-friendly interface
+
+## How to Use
+
+### Prepare Your Spreadsheet
+
+1. Create a Google Sheet with your recipient data
+2. Include a column with "email address" in its header (e.g., "Email Address", "Student Email Address", etc.)
+3. Add any other columns you want to use as variables in your emails
+
+### Create Your Email Template
+
+1. Create a draft email in Gmail
+2. Use variables in your subject or body by surrounding column names with double curly braces
+   - Example: `Hello {{name}}, Your order #{{order number}} has shipped!`
+3. Variables are case-insensitive, so `{{Name}}` and `{{name}}` work the same
+
+### Send Your Emails
+
+1. Click "Start" in the sidebar
+2. Enter your name (will appear as the sender)
+3. Select your email template from the dropdown
+4. Send a test email first to verify everything works
+5. Click "Send Emails" to send to all recipients
+
+## Variables
+
+- Use `{{column name}}` to insert data from any column
+- Variables work in both subject line and email body
+- Spaces in variable names are allowed: `{{First Name}}`
+- Case doesn't matter: `{{first name}}` = `{{First Name}}` = `{{FIRST NAME}}`
+
+## Tips
+
+- Always send a test email first
+- Check the "Available Variables" section to see what variables you can use
+- Make sure your email address column has "email address" in its header
+- Each recipient must have a valid email address
+
+## Limitations
+
+- Uses Gmail's daily sending limits
+- Templates must be saved as Gmail drafts
+- Maximum 5 most recent drafts shown in template selection
+
+## Permissions Required
+
+The add-on requires these permissions:
+- View and manage your spreadsheets in Google Drive
+- View and manage your email drafts and send email as you
+- Display and run third-party web content in prompts and sidebars inside Google applications
+
+## Support
+
+This is an open-source project. For issues or feature requests, please create an issue in the GitHub repository.
 
 ## Setup Instructions
 

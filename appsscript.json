@@ -3,30 +3,44 @@
   "dependencies": {
     "enabledAdvancedServices": [{
       "userSymbol": "Gmail",
-      "serviceId": "gmail",
-      "version": "v1"
+      "version": "v1",
+      "serviceId": "gmail"
     }]
   },
   "exceptionLogging": "STACKDRIVER",
   "runtimeVersion": "V8",
+  "webapp": {
+    "executeAs": "USER_ACCESSING",
+    "access": "ANYONE"
+  },
   "oauthScopes": [
     "https://www.googleapis.com/auth/script.container.ui",
     "https://www.googleapis.com/auth/spreadsheets.currentonly",
     "https://www.googleapis.com/auth/gmail.compose",
+    "https://www.googleapis.com/auth/gmail.addons.execute",
+    "https://www.googleapis.com/auth/script.locale",
+    "https://www.googleapis.com/auth/gmail.readonly",
     "https://www.googleapis.com/auth/gmail.send",
+    "https://mail.google.com/",
     "https://www.googleapis.com/auth/gmail.modify",
     "https://www.googleapis.com/auth/userinfo.email"
   ],
   "addOns": {
     "common": {
-      "name": "Open Source Mail Merge",
+      "name": "OSMM",
       "logoUrl": "https://www.gstatic.com/images/icons/material/system/1x/email_black_48dp.png",
+      "useLocaleFromApp": true,
+      "homepageTrigger": {
+        "runFunction": "onHomepage",
+        "enabled": true
+      },
       "layoutProperties": {
-        "primaryColor": "#1a73e8"
+        "primaryColor": "#2f974b"
       }
     },
     "sheets": {
       "homepageTrigger": {
+        "enabled": true,
         "runFunction": "onHomepage"
       }
     }

@@ -3,12 +3,18 @@
  */
 function onHomepage(e) {
   var builder = CardService.newCardBuilder();
-  builder.setHeader(CardService.newCardHeader().setTitle('Open Source Mail Merge'));
+  builder.setHeader(CardService.newCardHeader()
+    .setTitle('OSMM')
+    .setImageStyle(CardService.ImageStyle.SQUARE));
   
   var section = CardService.newCardSection()
     .addWidget(CardService.newTextButton()
-      .setText('Start Mail Merge')
-      .setOnClickAction(CardService.newAction().setFunctionName('showSidebar')));
+      .setText('Start OSMM')
+      .setBackgroundColor("#2f974b")
+      .setTextButtonStyle(CardService.TextButtonStyle.FILLED)
+      .setOnClickAction(CardService.newAction().setFunctionName('showSidebar')))
+    .addWidget(CardService.newTextParagraph()
+      .setText("Hope this helps!"));
   
   builder.addSection(section);
   return builder.build();
@@ -33,9 +39,21 @@ function getSheetData() {
   Logger.log('Raw data from sheet:');
   Logger.log(data);
   
+  // Find email column index
+  var emailColumnIndex = -1;
+  data[0].forEach(function(header, index) {
+    if (header.toString().toLowerCase().includes('email address')) {
+      emailColumnIndex = index;
+    }
+  });
+  
+  if (emailColumnIndex === -1) {
+    throw new Error('No column with "email address" found in the sheet. Please add an email address column.');
+  }
+  
   var rows = data.slice(1).filter(row => {
     Logger.log('Checking row: ' + JSON.stringify(row));
-    return row[0] && row[1];
+    return row[0] && row[emailColumnIndex]; // Check first column and email column are not empty
   });
   
   Logger.log('Filtered rows:');
@@ -43,7 +61,8 @@ function getSheetData() {
   
   return {
     headers: data[0],
-    rows: rows
+    rows: rows,
+    emailColumnIndex: emailColumnIndex
   };
 }
 
@@ -78,8 +97,9 @@ function sendMailMerge(templateId, senderName) {
   var data = getSheetData();
   var headers = data.headers.map(function(header) { return header.toLowerCase(); });
   var rows = data.rows;
+  var emailColumnIndex = data.emailColumnIndex;
   var sent = 0;
-  var warnings = [];
+  var errors = [];
   
   rows.forEach(function(row, rowIndex) {
     try {
@@ -88,56 +108,45 @@ function sendMailMerge(templateId, senderName) {
       
       // Replace all variables in both subject and body
       headers.forEach(function(header, index) {
-        // Convert value to string, but handle 0 properly
         var value = row[index];
-        // Check if value is numeric (including 0) or any other type
         var stringValue = (value === 0 || value) ? String(value) : '';
-        
-        // Check for oversized values
-        if (stringValue.length > 50000) {
-          warnings.push(`Warning: Value for ${header} in row ${rowIndex + 2} exceeds 50,000 characters and may be truncated`);
-          stringValue = stringValue.substring(0, 50000) + '...';
-        }
-        
         var regex = new RegExp('{{\\s*' + header + '\\s*}}', 'gi');
         personalizedBody = personalizedBody.replace(regex, stringValue);
         personalizedSubject = personalizedSubject.replace(regex, stringValue);
       });
       
-      // Check final email size (rough estimate)
-      if (personalizedBody.length > 10000000) { // 10MB limit
-        warnings.push(`Warning: Email for row ${rowIndex + 2} exceeds recommended size and may not send properly`);
+      // Get email from the email column and clean it
+      var email = String(row[emailColumnIndex]).toLowerCase().trim();
+      
+      // Validate email format
+      if (!email.match(/^[^@\s]+@[^@\s]+\.[^@\s]+$/)) {
+        throw new Error('Invalid email format: ' + email);
       }
       
-      // Limit subject line to 998 characters (email standard)
-      if (personalizedSubject.length > 998) {
-        warnings.push(`Warning: Subject line for row ${rowIndex + 2} exceeds 998 characters and will be truncated`);
-        personalizedSubject = personalizedSubject.substring(0, 998);
-      }
-      
-      // Get email from the second column (maintaining existing behavior)
-      var email = row[1];
-      
+      // Send the email
       GmailApp.sendEmail(
         email,
         personalizedSubject,
         '',  // Plain text body (empty since we're sending HTML)
         {
           htmlBody: personalizedBody,
-          name: senderName  // Use the provided sender name
+          name: senderName || 'Mail Merge'
         }
       );
       sent++;
+      
+      // Add small delay between sends
+      Utilities.sleep(500);
+      
     } catch (error) {
-      Logger.log('Failed to send email to ' + row[1] + ': ' + error.toString());
-      warnings.push(`Error sending to ${row[1]}: ${error.toString()}`);
+      Logger.log('Failed to send email to ' + row[emailColumnIndex] + ': ' + error.toString());
+      errors.push('Error sending to ' + row[0] + ': ' + error.toString());
     }
   });
   
-  // Return success message with any warnings
   var message = sent + ' emails sent successfully';
-  if (warnings.length > 0) {
-    message += '\n\n' + warnings.join('\n');
+  if (errors.length > 0) {
+    message += '\n' + errors.join('\n');
   }
   return message;
 }
@@ -172,7 +181,6 @@ function sendTestEmail(templateId, senderName, senderEmail) {
     body: message.getBody()
   };
   
-  // Get sheet data to access headers and first row for test email
   var data = getSheetData();
   var headers = data.headers.map(function(header) { return header.toLowerCase(); });
   var firstRow = data.rows[0] || [];
@@ -180,13 +188,15 @@ function sendTestEmail(templateId, senderName, senderEmail) {
   var personalizedBody = template.body;
   var personalizedSubject = template.subject;
   
-  // Replace all variables in both subject and body using first row data
   headers.forEach(function(header, index) {
-    var value = firstRow[index] || '';
+    var value = firstRow[index];
+    var stringValue = (value === 0 || value) ? String(value) : '';
     var regex = new RegExp('{{\\s*' + header + '\\s*}}', 'gi');
-    personalizedBody = personalizedBody.replace(regex, value);
-    personalizedSubject = personalizedSubject.replace(regex, value);
+    personalizedBody = personalizedBody.replace(regex, stringValue);
+    personalizedSubject = personalizedSubject.replace(regex, stringValue);
   });
+  
+  senderEmail = String(senderEmail).toLowerCase().trim();
   
   try {
     GmailApp.sendEmail(
@@ -195,11 +205,12 @@ function sendTestEmail(templateId, senderName, senderEmail) {
       '',  // Plain text body (empty since we're sending HTML)
       {
         htmlBody: personalizedBody,
-        name: senderName  // Use the provided sender name
+        name: senderName || 'Mail Merge'
       }
     );
     return 'Test email sent successfully to ' + senderEmail;
   } catch (error) {
+    Logger.log('Failed to send test email: ' + error.toString());
     throw new Error('Failed to send test email: ' + error.toString());
   }
 }
