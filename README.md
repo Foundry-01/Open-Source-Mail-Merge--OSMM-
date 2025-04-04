@@ -14,7 +14,6 @@ A free and open-source mail merge add-on for Google Sheets that lets you send pe
 2. Enable the Apps Script Manifest:
    - Click on the ⚙️ settings icon (Project Settings)
    - Check "Show "appsscript.json" manifest file in editor"
-   - Click "Save"
 
 3. Add the project files:
    - In the script editor, rename the default `Code.gs` file if it exists
@@ -26,7 +25,6 @@ A free and open-source mail merge add-on for Google Sheets that lets you send pe
 
 4. Save all files:
    - Click the 💾 save icon or press Ctrl+S (Cmd+S on Mac)
-   - Make sure all files are saved without errors
 
 5. Run the initial setup:
    - In the script editor, select the `onHomepage` function from the dropdown menu at the top
@@ -39,16 +37,20 @@ A free and open-source mail merge add-on for Google Sheets that lets you send pe
    - Click "Deploy" > "New deployment"
    - Click "Select type" > "Test deployments"
    - In the next screen, select "Google Workspace Add-on"
-   - Select "Sheet" under "Configuration"
-   - Click "Install" and follow the prompts
+   - Install Sheets under Configuration
    - You'll get a confirmation that the test deployment is installed
+   - Click "Done"
 
 7. Use the add-on:
    - Open any Google Sheet
    - Refresh the page
-   - Click "Extensions" in the top menu
-   - You should see "Open Source Mail Merge" under "Development" section
-   - Click "Start" in the sidebar
+   - Create a column with the heading "Email Address"
+   - Create other columns with variables as needed
+   - In your gmail, create a draft that will serve as your template
+      - Include a subject, all content, and signature
+      - In your gmail draft, tag these variables with {{variable}}
+   - Click the little arrow on the bottom right corner of the screen if you are unable to see the workspace quick access toolbar on the right side of the screen (vertical down from your google profile picture)
+   - Select the OSMM icon (black envelope)
 
 ## Features
 
