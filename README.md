@@ -1,5 +1,7 @@
 # Open Source Mail Merge (OSMM)
 
+Github link: https://github.com/jdragon3001/Open-Source-Mail-Merge--OSMM-
+
 Apps Script project share link: https://script.google.com/d/1_2XrHuWGVz8DhP61xyYMA4GKceFtfSzXu_aJej8vu7Rbiw6j9OFYFeVY/edit?usp=sharing 
 
 A free and open-source mail merge add-on for Google Sheets that lets you send personalized emails using Gmail drafts as templates.
@@ -55,6 +57,7 @@ A free and open-source mail merge add-on for Google Sheets that lets you send pe
 ## Features
 
 - Send personalized emails to multiple recipients using Gmail drafts as templates
+- CC as many people as you want by inputting cc columns with emails
 - Dynamic variable replacement using `{{variable}}` syntax
 - Case-insensitive variable matching
 - Automatic email column detection (searches for any column containing "email address")

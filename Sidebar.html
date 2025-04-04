@@ -351,6 +351,9 @@
         var loadButton = document.getElementById('loadButton');
         var recipientList = document.getElementById('recipientList');
         loadButton.disabled = true;
+        loadButton.style.opacity = '0.7';
+        loadButton.style.cursor = 'default';
+        loadButton.innerHTML = 'Loading...';
         document.getElementById('status').innerHTML = '<div style="color: #1a73e8;">Loading...</div>';
         
         google.script.run
@@ -358,6 +361,8 @@
             loadButton.innerHTML = 'Load Recipients & Templates';
             loadButton.classList.add('done');
             loadButton.disabled = false;
+            loadButton.style.opacity = '1';
+            loadButton.style.cursor = 'pointer';
             recipientList.style.display = 'block';
             
             // Add refresh button
@@ -376,6 +381,9 @@
           .withFailureHandler(function(error) {
             document.getElementById('status').innerHTML = '<div style="color: #d93025;">Error: ' + error + '</div>';
             loadButton.disabled = false;
+            loadButton.style.opacity = '1';
+            loadButton.style.cursor = 'pointer';
+            loadButton.innerHTML = 'Load Recipients & Templates';
           })
           .getSheetData();
       }
@@ -484,8 +492,8 @@
         });
         document.getElementById('recipients').innerHTML = recipientHtml;
         
-        // Display available variables
-        var variablesHtml = data.headers.map(function(header) {
+        // Display available variables using filtered headers
+        var variablesHtml = data.displayHeaders.map(function(header) {
           return `<span class="variable-tag">{{${header}}}</span>`;
         }).join('');
         document.getElementById('variablesList').innerHTML = variablesHtml;

@@ -39,11 +39,23 @@ function getSheetData() {
   Logger.log('Raw data from sheet:');
   Logger.log(data);
   
-  // Find email column index
+  // Find email column index and all cc column indices
   var emailColumnIndex = -1;
+  var ccColumnIndices = [];
+  var filteredHeaders = [];
+  
+  // Process headers and collect indices
   data[0].forEach(function(header, index) {
-    if (header.toString().toLowerCase().includes('email address')) {
+    var headerLower = header.toString().toLowerCase();
+    // Store non-empty, non-cc headers for variables
+    if (headerLower && headerLower !== 'cc') {
+      filteredHeaders.push(header);
+    }
+    if (headerLower.includes('email address')) {
       emailColumnIndex = index;
+    }
+    if (headerLower === 'cc') {
+      ccColumnIndices.push(index);
     }
   });
   
@@ -60,9 +72,11 @@ function getSheetData() {
   Logger.log(rows);
   
   return {
-    headers: data[0],
+    headers: data[0], // Keep original headers for data processing
+    displayHeaders: filteredHeaders, // Filtered headers for variable display
     rows: rows,
-    emailColumnIndex: emailColumnIndex
+    emailColumnIndex: emailColumnIndex,
+    ccColumnIndices: ccColumnIndices
   };
 }
 
@@ -98,6 +112,7 @@ function sendMailMerge(templateId, senderName) {
   var headers = data.headers.map(function(header) { return header.toLowerCase(); });
   var rows = data.rows;
   var emailColumnIndex = data.emailColumnIndex;
+  var ccColumnIndices = data.ccColumnIndices;
   var sent = 0;
   var errors = [];
   
@@ -118,7 +133,27 @@ function sendMailMerge(templateId, senderName) {
       // Get email from the email column and clean it
       var email = String(row[emailColumnIndex]).toLowerCase().trim();
       
-      // Validate email format
+      // Get CC emails from all CC columns
+      var ccEmails = [];
+      ccColumnIndices.forEach(function(ccIndex) {
+        var ccEmail = String(row[ccIndex] || '').toLowerCase().trim();
+        // Basic email validation for CC
+        if (ccEmail && ccEmail.includes('@') && ccEmail.slice(ccEmail.indexOf('@')).includes('.')) {
+          ccEmails.push(ccEmail);
+        }
+      });
+      
+      var options = {
+        htmlBody: personalizedBody,
+        name: senderName || 'Mail Merge'
+      };
+      
+      // Add CC recipients if any valid emails were found
+      if (ccEmails.length > 0) {
+        options.cc = ccEmails.join(',');
+      }
+      
+      // Keep strict validation for primary email
       if (!email.match(/^[^@\s]+@[^@\s]+\.[^@\s]+$/)) {
         throw new Error('Invalid email format: ' + email);
       }
@@ -128,10 +163,7 @@ function sendMailMerge(templateId, senderName) {
         email,
         personalizedSubject,
         '',  // Plain text body (empty since we're sending HTML)
-        {
-          htmlBody: personalizedBody,
-          name: senderName || 'Mail Merge'
-        }
+        options
       );
       sent++;
       
@@ -199,9 +231,10 @@ function sendTestEmail(templateId, senderName, senderEmail) {
   senderEmail = String(senderEmail).toLowerCase().trim();
   
   try {
+    // For test emails, we only send to the user without any CC
     GmailApp.sendEmail(
       senderEmail,
-      personalizedSubject,
+      '[TEST] ' + personalizedSubject,  // Add [TEST] prefix to subject
       '',  // Plain text body (empty since we're sending HTML)
       {
         htmlBody: personalizedBody,
