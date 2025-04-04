@@ -2,17 +2,17 @@
 <html>
   <head>
     <base target="_top">
+    <meta name="theme-color" content="#2f974b">
     <style>
+      :root {
+        --brand-green: #2f974b;
+      }
       body {
         font-family: 'Google Sans', Arial, sans-serif;
         color: #202124;
         margin: 0;
         padding: 0;
         background: #fff;
-      }
-      /* Custom green color scheme */
-      :root {
-        --brand-green: #2f974b;
       }
       .container {
         padding: 16px;
@@ -67,7 +67,7 @@
       }
       .load-button {
         width: 100%;
-        background: #202124;
+        background: #2f974b;
         color: white;
         border: none;
         border-radius: 4px;
@@ -79,8 +79,8 @@
         align-items: center;
         justify-content: center;
       }
-      .load-button:hover {
-        background: #000;
+      .load-button:not(:disabled):hover {
+        background: #268540;
       }
       .load-button.done {
         background: var(--brand-green);
@@ -88,6 +88,7 @@
       .load-button:disabled {
         opacity: 0.7;
         cursor: default;
+        background: #2f974b;
       }
       .load-button .check {
         margin-right: 8px;
@@ -294,6 +295,32 @@
       .refresh-button svg {
         margin-right: 8px;
       }
+      .tips-section {
+        margin-top: 24px;
+        padding: 12px;
+        background: #f8f9fa; /* Light gray background */
+        border-radius: 4px;
+        border: 1px solid #dadce0;
+      }
+
+      .tips-title {
+        font-size: 14px;
+        font-weight: 500;
+        color: #202124;
+        margin-bottom: 8px;
+      }
+
+      .tips-list {
+        font-size: 12px;
+        color: #5f6368;
+        line-height: 1.6;
+        margin: 0;
+        padding-left: 16px; /* Indent list items */
+      }
+
+      .tips-list li {
+        margin-bottom: 4px;
+      }
     </style>
   </head>
   <body>
@@ -303,7 +330,7 @@
       
       <div class="input-section">
         <label for="senderName">Your Name</label>
-        <input type="text" id="senderName" placeholder="Enter your name">
+        <input type="text" id="senderName" placeholder="Enter your name" onkeydown="handleEnter(event)">
         <div class="helper-text">
           This name will appear in recipients' inboxes. Include your signature in the draft template.
         </div>
@@ -343,6 +370,18 @@
           </svg>
           Send Emails
         </button>
+
+        <!-- New Tips Section -->
+        <div class="tips-section">
+          <div class="tips-title">Quick Tips</div>
+          <ul class="tips-list">
+            <li>Use <code>{{column name}}</code> in Gmail drafts for variables.</li>
+            <li>Add a column named "cc" (case-insensitive) for CC recipients.</li>
+            <li>Use "Refresh" to update recipients/templates after changes.</li>
+            <li>Always send a test email first!</li>
+          </ul>
+        </div>
+        <!-- End Tips Section -->
       </div>
     </div>
 
@@ -358,11 +397,11 @@
         
         google.script.run
           .withSuccessHandler(function(data) {
-            loadButton.innerHTML = 'Load Recipients & Templates';
-            loadButton.classList.add('done');
-            loadButton.disabled = false;
-            loadButton.style.opacity = '1';
-            loadButton.style.cursor = 'pointer';
+            // Keep the button disabled and grayed out
+            loadButton.innerHTML = 'Recipients & Templates Loaded';
+            loadButton.style.opacity = '0.5';
+            loadButton.style.cursor = 'default';
+            loadButton.disabled = true;
             recipientList.style.display = 'block';
             
             // Add refresh button
@@ -379,6 +418,7 @@
             loadDraftTemplates();
           })
           .withFailureHandler(function(error) {
+            // On error, keep button enabled to allow retrying
             document.getElementById('status').innerHTML = '<div style="color: #d93025;">Error: ' + error + '</div>';
             loadButton.disabled = false;
             loadButton.style.opacity = '1';
@@ -651,6 +691,17 @@
             document.getElementById('status').innerHTML = '<div style="color: #d93025;">Error: ' + error + '</div>';
           })
           .sendMailMerge(templateId, senderName);
+      }
+
+      // New function to handle Enter key press
+      function handleEnter(event) {
+        if (event.keyCode === 13) { // 13 is the key code for Enter
+          event.preventDefault(); // Prevent default form submission if applicable
+          // Check if the load button is not already disabled
+          if (!document.getElementById('loadButton').disabled) {
+            loadData();
+          }
+        }
       }
     </script>
   </body>

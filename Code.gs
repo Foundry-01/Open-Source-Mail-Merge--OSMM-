@@ -4,7 +4,7 @@
 function onHomepage(e) {
   var builder = CardService.newCardBuilder();
   builder.setHeader(CardService.newCardHeader()
-    .setTitle('OSMM')
+    .setTitle('')
     .setImageStyle(CardService.ImageStyle.SQUARE));
   
   var section = CardService.newCardSection()
@@ -25,7 +25,7 @@ function onHomepage(e) {
  */
 function showSidebar() {
   var html = HtmlService.createHtmlOutputFromFile('Sidebar')
-    .setTitle('Open Source Mail Merge')
+    .setTitle(' ')
     .setWidth(300);
   
   SpreadsheetApp.getUi().showSidebar(html);
