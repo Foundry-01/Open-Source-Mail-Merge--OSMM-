@@ -15,14 +15,14 @@
         background: #fff;
       }
       .container {
-        padding: 16px;
+        padding: 4px 8px;
         width: 100%;
         box-sizing: border-box;
       }
       .title {
         display: flex;
         align-items: center;
-        margin-bottom: 24px;
+        margin-bottom: 12px;
         text-align: center;
       }
       h2 {
@@ -158,8 +158,8 @@
         padding: 0;
       }
       .recipient-list {
-        margin-bottom: 24px;
-        height: 152px;
+        margin-bottom: 16px;
+        height: 120px;
         overflow-y: auto;
         overflow-x: hidden;
         border: 1px solid #dadce0;
@@ -169,9 +169,9 @@
       .recipient {
         display: flex;
         align-items: center;
-        padding: 8px 12px;
+        padding: 6px 12px;
         border-bottom: 1px solid #dadce0;
-        height: 48px;
+        height: 40px;
         box-sizing: border-box;
         width: 100%;
       }
@@ -321,6 +321,39 @@
       .tips-list li {
         margin-bottom: 4px;
       }
+
+      .footer-links {
+        margin-top: 16px;
+        padding-top: 16px;
+        border-top: 1px solid #dadce0;
+        text-align: center;
+        font-size: 12px;
+        color: #5f6368;
+      }
+      
+      .footer-links a {
+        color: #1a73e8;
+        text-decoration: none;
+      }
+      
+      .footer-links a:hover {
+        text-decoration: underline;
+      }
+
+      .dialog-header {
+        background-color: #f1f3f4;
+        padding: 4px;
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        border-bottom: 1px solid #dadce0;
+      }
+
+      .name-input {
+        margin-top: 0;
+        margin-bottom: 8px;
+        width: 100%;
+      }
     </style>
   </head>
   <body>
@@ -337,7 +370,7 @@
       </div>
       
       <button onclick="loadData()" id="loadButton" class="load-button">Start</button>
-      <div id="status" style="margin: 8px 0;"></div>
+      <div id="status"></div>
       
       <div id="recipientList" style="display: none;">
         <div class="section-header">
@@ -371,7 +404,7 @@
           Send Emails
         </button>
 
-        <!-- New Tips Section -->
+        <!-- Tips Section -->
         <div class="tips-section">
           <div class="tips-title">Quick Tips</div>
           <ul class="tips-list">
@@ -381,7 +414,11 @@
             <li>Always send a test email first!</li>
           </ul>
         </div>
-        <!-- End Tips Section -->
+      </div>
+
+      <!-- Footer Links - Moved outside recipientList -->
+      <div class="footer-links" style="margin-top: 16px;">
+        <a href="#" onclick="google.script.run.showPrivacyPolicy(); return false;">Privacy Policy</a>
       </div>
     </div>
 
@@ -618,48 +655,15 @@
             // Then send the test email
             google.script.run
               .withSuccessHandler(function(result) {
-                document.getElementById('status').innerHTML = '<div style="color: #188038;">' + result + '</div>';
-                // After 2 seconds, restore the refresh button
-                setTimeout(function() {
-                  document.getElementById('status').innerHTML = `
-                    <button onclick="refreshData()" class="refresh-button">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
-                      </svg>
-                      Refresh
-                    </button>
-                  `;
-                }, 2000);
+                handleSuccess(result);
               })
               .withFailureHandler(function(error) {
                 document.getElementById('status').innerHTML = '<div style="color: #d93025;">Error: ' + error + '</div>';
-                // After 2 seconds, restore the refresh button even on error
-                setTimeout(function() {
-                  document.getElementById('status').innerHTML = `
-                    <button onclick="refreshData()" class="refresh-button">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
-                      </svg>
-                      Refresh
-                    </button>
-                  `;
-                }, 2000);
               })
               .sendTestEmail(templateId, senderName, userEmail);
           })
           .withFailureHandler(function(error) {
             document.getElementById('status').innerHTML = '<div style="color: #d93025;">Error getting user email: ' + error + '</div>';
-            // After 2 seconds, restore the refresh button
-            setTimeout(function() {
-              document.getElementById('status').innerHTML = `
-                <button onclick="refreshData()" class="refresh-button">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
-                  </svg>
-                  Refresh
-                </button>
-              `;
-            }, 2000);
           })
           .getUserEmail();
       }
@@ -685,10 +689,35 @@
         document.getElementById('status').innerHTML = '<div style="color: #1a73e8;">Sending emails...</div>';
         google.script.run
           .withSuccessHandler(function(result) {
-            document.getElementById('status').innerHTML = '<div style="color: #188038;">' + result + '</div>';
+            // On success, update status div with result or error message
+            const statusDiv = document.getElementById('status');
+            if (result.startsWith('0 emails')) {
+              statusDiv.innerHTML = '<div style="color: #dc3545;">No emails were sent. Please check your recipient list and try again.</div>';
+            } else {
+              statusDiv.innerHTML = '<div style="color: #28a745;">' + result + '</div>';
+            }
+            // Append the refresh button
+            statusDiv.innerHTML += `
+              <button onclick="refreshData()" class="refresh-button" style="margin-top: 8px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+                </svg>
+                Refresh
+              </button>`;
           })
           .withFailureHandler(function(error) {
-            document.getElementById('status').innerHTML = '<div style="color: #d93025;">Error: ' + error + '</div>';
+            // On failure, update status div with error message and refresh button
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = '<div style="color: #dc3545;">No emails were sent. Please check your recipient list and try again.</div>';
+            console.error("Email sending failed:", error); // Log the actual error
+            // Append the refresh button
+            statusDiv.innerHTML += `
+              <button onclick="refreshData()" class="refresh-button" style="margin-top: 8px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+                </svg>
+                Refresh
+              </button>`;
           })
           .sendMailMerge(templateId, senderName);
       }

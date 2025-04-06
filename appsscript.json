@@ -27,7 +27,7 @@
   ],
   "addOns": {
     "common": {
-      "name": "OSMM",
+      "name": "Open Source Mail Merge",
       "logoUrl": "https://www.gstatic.com/images/icons/material/system/1x/email_black_48dp.png",
       "useLocaleFromApp": true,
       "homepageTrigger": {

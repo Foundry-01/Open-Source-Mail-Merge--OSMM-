@@ -14,7 +14,10 @@ function onHomepage(e) {
       .setTextButtonStyle(CardService.TextButtonStyle.FILLED)
       .setOnClickAction(CardService.newAction().setFunctionName('showSidebar')))
     .addWidget(CardService.newTextParagraph()
-      .setText("Hope this helps!"));
+      .setText("Send personalized emails using Gmail drafts as templates. Create dynamic emails with variables from your spreadsheet."))
+    .addWidget(CardService.newTextButton()
+      .setText('Privacy Policy')
+      .setOnClickAction(CardService.newAction().setFunctionName('showPrivacyPolicy')));
   
   builder.addSection(section);
   return builder.build();
@@ -24,10 +27,30 @@ function onHomepage(e) {
  * Opens a sidebar in the document containing the add-on's user interface.
  */
 function showSidebar() {
-  var html = HtmlService.createHtmlOutputFromFile('Sidebar')
-    .setTitle(' ')
-    .setWidth(300);
-  
+  // Try possible case variations
+  const possibleNames = ['Sidebar.html', 'sidebar.html'];
+  let html;
+  let success = false;
+
+  for (let fileName of possibleNames) {
+    try {
+      html = HtmlService.createHtmlOutputFromFile(fileName)
+        .setTitle(' ')
+        .setWidth(300);
+      success = true;
+      break;
+    } catch (error) {
+      if (!error.message.includes('No HTML file named')) {
+        throw error; // If it's a different error, throw it immediately
+      }
+      // Otherwise continue trying other cases
+    }
+  }
+
+  if (!success) {
+    throw new Error('Could not find sidebar file. Please ensure either "Sidebar.html" or "sidebar.html" exists in your project.');
+  }
+
   SpreadsheetApp.getUi().showSidebar(html);
 }
 
@@ -60,7 +83,11 @@ function getSheetData() {
   });
   
   if (emailColumnIndex === -1) {
-    throw new Error('No column with "email address" found in the sheet. Please add an email address column.');
+    throw new Error('Please add a column named "Email Address" to your spreadsheet to specify where to send the emails.');
+  }
+  
+  if (data.length === 0) {
+    throw new Error('No recipients found. Please add recipient information to your spreadsheet.');
   }
   
   var rows = data.slice(1).filter(row => {
@@ -254,4 +281,121 @@ function getUserEmail() {
     throw new Error('Could not determine user email. Please make sure you are logged in.');
   }
   return email;
+}
+
+/**
+ * Shows the privacy policy in a modal dialog
+ */
+function showPrivacyPolicy() {
+  var html = HtmlService.createHtmlOutput(`
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Privacy Policy - Open Source Mail Merge</title>
+        <style>
+            body {
+                font-family: 'Google Sans', Arial, sans-serif;
+                line-height: 1.6;
+                margin: 0;
+                padding: 20px;
+                color: #202124;
+            }
+            h1 {
+                color: #1a73e8;
+                font-size: 2em;
+                margin-bottom: 1em;
+            }
+            h2 {
+                color: #202124;
+                font-size: 1.5em;
+                margin-top: 1.5em;
+            }
+            p {
+                margin-bottom: 1em;
+            }
+            ul {
+                margin-bottom: 1em;
+                padding-left: 20px;
+            }
+            li {
+                margin-bottom: 0.5em;
+            }
+            .last-updated {
+                color: #5f6368;
+                font-style: italic;
+                margin-top: 2em;
+            }
+            a {
+                color: #1a73e8;
+                text-decoration: none;
+            }
+            a:hover {
+                text-decoration: underline;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Privacy Policy for Open Source Mail Merge</h1>
+
+        <p>This Privacy Policy describes how Open Source Mail Merge ("we", "our", or "the add-on") handles information when you use our Google Workspace Add-on.</p>
+
+        <h2>Information We Access</h2>
+        <p>Our add-on requires access to:</p>
+        <ul>
+            <li>Google Sheets: To read recipient information from your spreadsheet</li>
+            <li>Gmail: To access your draft emails and send personalized emails</li>
+            <li>Your email address: To send test emails and identify you as the sender</li>
+        </ul>
+
+        <h2>How We Use Your Information</h2>
+        <p>The add-on uses your information solely to:</p>
+        <ul>
+            <li>Read recipient data from your active spreadsheet</li>
+            <li>Access your Gmail drafts to use as email templates</li>
+            <li>Send personalized emails to your recipients</li>
+            <li>Send test emails to your account</li>
+        </ul>
+
+        <h2>Data Storage and Retention</h2>
+        <p>Open Source Mail Merge:</p>
+        <ul>
+            <li>Does not store any of your data outside of your Google Workspace account</li>
+            <li>Does not collect or retain any personal information</li>
+            <li>Does not share or transmit your data to any third parties</li>
+            <li>Only processes data during active use of the add-on</li>
+        </ul>
+
+        <h2>Data Security</h2>
+        <p>We prioritize the security of your data by:</p>
+        <ul>
+            <li>Operating entirely within Google's secure infrastructure</li>
+            <li>Using only official Google APIs for all operations</li>
+            <li>Not storing or transmitting data to external servers</li>
+            <li>Requiring explicit user authorization for all permissions</li>
+        </ul>
+
+        <h2>Your Rights</h2>
+        <p>You have the right to:</p>
+        <ul>
+            <li>Know what data the add-on accesses</li>
+            <li>Revoke the add-on's access to your Google account at any time</li>
+            <li>Request information about how your data is used</li>
+        </ul>
+
+        <h2>Changes to This Policy</h2>
+        <p>We may update this Privacy Policy from time to time. We will notify users of any material changes through the Google Workspace Marketplace listing.</p>
+
+        <h2>Contact Us</h2>
+        <p>If you have any questions about this Privacy Policy or our data practices, please contact us at <a href="mailto:contact@binaryheart.org">contact@binaryheart.org</a>.</p>
+
+        <p class="last-updated">Last updated: March 2024</p>
+    </body>
+    </html>
+  `)
+    .setWidth(600)
+    .setHeight(600);
+  
+  SpreadsheetApp.getUi().showModalDialog(html, 'Privacy Policy');
 } 
