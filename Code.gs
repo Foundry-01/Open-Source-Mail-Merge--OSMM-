@@ -58,49 +58,61 @@ function getSheetData() {
   var sheet = SpreadsheetApp.getActiveSheet();
   var dataRange = sheet.getDataRange();
   var data = dataRange.getValues();
-  
+
   Logger.log('Raw data from sheet:');
   Logger.log(data);
-  
-  // Find email column index and all cc column indices
+
+  // Find email column index and all cc column indices using strict matches
   var emailColumnIndex = -1;
   var ccColumnIndices = [];
   var filteredHeaders = [];
-  
-  // Process headers and collect indices
-  data[0].forEach(function(header, index) {
-    var headerLower = header.toString().toLowerCase();
-    // Store non-empty, non-cc headers for variables
-    if (headerLower && headerLower !== 'cc') {
+
+  var headers = (data && data.length > 0) ? data[0] : [];
+
+  headers.forEach(function(header, index) {
+    var headerLower = header.toString().trim().toLowerCase();
+
+    // Capture non-empty, non-cc headers for variable display
+    if (headerLower && headerLower !== 'cc' && headerLower !== 'bcc') {
       filteredHeaders.push(header);
     }
-    if (headerLower.includes('email address')) {
-      emailColumnIndex = index;
-    }
+
     if (headerLower === 'cc') {
       ccColumnIndices.push(index);
+      return;
+    }
+
+    // Strict matching only: exactly "email" or "email address"
+    if (emailColumnIndex === -1 && (headerLower === 'email' || headerLower === 'email address')) {
+      emailColumnIndex = index;
     }
   });
-  
+
+  // Require a valid email header to proceed
   if (emailColumnIndex === -1) {
-    throw new Error('Please add a column named "Email Address" to your spreadsheet to specify where to send the emails.');
+    var headerPreview = headers.map(function(h) { return '"' + String(h) + '"'; }).join(', ');
+    throw new Error('Email column not found. Add a header named exactly "Email" or "Email Address" (case-insensitive). Headers found: ' + headerPreview + '.');
   }
-  
-  if (data.length === 0) {
-    throw new Error('No recipients found. Please add recipient information to your spreadsheet.');
+
+  // Build recipient rows only if we have a detected email column and at least one data row
+  var rows = [];
+  if (data && data.length > 1) {
+    rows = data.slice(1).filter(function(row) {
+      try {
+        var emailCell = row[emailColumnIndex];
+        return emailCell && String(emailCell).trim() !== '';
+      } catch (e) {
+        return false;
+      }
+    });
   }
-  
-  var rows = data.slice(1).filter(row => {
-    Logger.log('Checking row: ' + JSON.stringify(row));
-    return row[0] && row[emailColumnIndex]; // Check first column and email column are not empty
-  });
-  
+
   Logger.log('Filtered rows:');
   Logger.log(rows);
-  
+
   return {
-    headers: data[0], // Keep original headers for data processing
-    displayHeaders: filteredHeaders, // Filtered headers for variable display
+    headers: headers, // original headers
+    displayHeaders: filteredHeaders,
     rows: rows,
     emailColumnIndex: emailColumnIndex,
     ccColumnIndices: ccColumnIndices

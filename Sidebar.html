@@ -4,18 +4,27 @@
     <base target="_top">
     <meta name="theme-color" content="#2f974b">
     <style>
+      * { box-sizing: border-box; }
       :root {
         --brand-green: #2f974b;
+        --brand-green-dark: #268540;
+        --text-primary: #202124;
+        --text-secondary: #5f6368;
+        --surface: #f0f4f9; /* match desired side panel tone */
+        --surface-alt: #f8f9fa;
       }
-      body {
-        font-family: 'Google Sans', Arial, sans-serif;
-        color: #202124;
+      html, body {
+        font-family: 'Google Sans', Roboto, Arial, sans-serif;
+        color: var(--text-primary);
         margin: 0;
         padding: 0;
-        background: #fff;
+        background: var(--surface) !important;
+        font-size: 14px;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
       }
       .container {
-        padding: 4px 8px;
+        padding: 8px;
         width: 100%;
         box-sizing: border-box;
       }
@@ -26,10 +35,10 @@
         text-align: center;
       }
       h2 {
-        color: #202124;
+        color: var(--text-primary);
         font-size: 16px;
         margin: 0 0 8px 0;
-        font-weight: 500;
+        font-weight: 600;
       }
       .title-description {
         color: #5f6368;
@@ -62,15 +71,15 @@
       }
       .helper-text {
         font-size: 12px;
-        color: #5f6368;
+        color: var(--text-secondary);
         margin-top: 4px;
       }
       .load-button {
         width: 100%;
-        background: #2f974b;
+        background: var(--brand-green);
         color: white;
         border: none;
-        border-radius: 4px;
+        border-radius: 6px;
         padding: 12px;
         font-size: 14px;
         font-weight: 500;
@@ -80,7 +89,7 @@
         justify-content: center;
       }
       .load-button:not(:disabled):hover {
-        background: #268540;
+        background: var(--brand-green-dark);
       }
       .load-button.done {
         background: var(--brand-green);
@@ -88,7 +97,7 @@
       .load-button:disabled {
         opacity: 0.7;
         cursor: default;
-        background: #2f974b;
+        background: var(--brand-green);
       }
       .load-button .check {
         margin-right: 8px;
@@ -106,16 +115,16 @@
       }
       .section-title {
         font-size: 14px;
-        color: #202124;
-        font-weight: 500;
+        color: var(--text-primary);
+        font-weight: 600;
       }
       .variables-list {
         margin: 8px 0 16px;
         padding: 8px 12px;
-        background: #f8f9fa;
+        background: var(--surface-alt);
         border-radius: 4px;
         font-size: 13px;
-        color: #5f6368;
+        color: var(--text-secondary);
         line-height: 1.6;
         display: none;  /* Hidden by default */
         max-height: 96px; /* Show approximately 3 lines */
@@ -135,11 +144,11 @@
         align-items: center;
         cursor: pointer;
         padding: 8px 0;
-        color: #5f6368;
+        color: var(--text-secondary);
         font-size: 13px;
       }
       .variables-header:hover {
-        color: #202124;
+        color: var(--text-primary);
       }
       .variables-header svg {
         margin-right: 8px;
@@ -159,7 +168,7 @@
       }
       .recipient-list {
         margin-bottom: 16px;
-        height: 120px;
+        height: 160px;
         overflow-y: auto;
         overflow-x: hidden;
         border: 1px solid #dadce0;
@@ -255,13 +264,13 @@
       }
       .send-button {
         width: 100%;
-        background: #202124;
+        background: var(--brand-green);
         color: white;
         border: none;
-        border-radius: 4px;
+        border-radius: 6px;
         padding: 12px;
         font-size: 14px;
-        font-weight: 500;
+        font-weight: 600;
         cursor: pointer;
         display: flex;
         align-items: center;
@@ -271,10 +280,10 @@
         margin-right: 8px;
       }
       .send-button:hover {
-        background: #000;
+        background: var(--brand-green-dark);
       }
       .send-button.test-email {
-        background: var(--brand-green);
+        background: #1a73e8;
         margin-bottom: 12px;
       }
       #status {
@@ -298,7 +307,7 @@
       .tips-section {
         margin-top: 24px;
         padding: 12px;
-        background: #f8f9fa; /* Light gray background */
+        background: var(--surface-alt);
         border-radius: 4px;
         border: 1px solid #dadce0;
       }
@@ -323,9 +332,7 @@
       }
 
       .footer-links {
-        margin-top: 16px;
-        padding-top: 16px;
-        border-top: 1px solid #dadce0;
+        margin-top: 12px;
         text-align: center;
         font-size: 12px;
         color: #5f6368;
@@ -376,7 +383,7 @@
         <div class="section-header">
           <span class="section-title">Recipients</span>
         </div>
-        <div class="recipient-list" id="recipients"></div>
+        <div id="recipientSummary" style="margin-bottom:12px; font-size:13px; color: var(--text-secondary);"></div>
         
         <select id="templateSelect">
           <option value="">Loading drafts...</option>
@@ -455,12 +462,17 @@
             loadDraftTemplates();
           })
           .withFailureHandler(function(error) {
-            // On error, keep button enabled to allow retrying
-            document.getElementById('status').innerHTML = '<div style="color: #d93025;">Error: ' + error + '</div>';
-            loadButton.disabled = false;
-            loadButton.style.opacity = '1';
-            loadButton.style.cursor = 'pointer';
-            loadButton.innerHTML = 'Load Recipients & Templates';
+            // Keep UI usable with friendly guidance
+            recipientList.style.display = 'block';
+            document.getElementById('recipientSummary').innerHTML = 'Add a header named <b>Email</b> or <b>Email Address</b> and at least one row, then click Refresh.';
+            document.getElementById('status').innerHTML = `
+              <button onclick="refreshData()" class="refresh-button">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+                </svg>
+                Refresh
+              </button>
+            `;
           })
           .getSheetData();
       }
@@ -477,7 +489,7 @@
         `;
         
         // Clear existing data while loading
-        document.getElementById('recipients').innerHTML = '';
+        document.getElementById('recipientSummary').innerHTML = '';
         document.getElementById('templateSelect').innerHTML = '<option value="">Loading drafts...</option>';
         
         // Load new data
@@ -533,7 +545,7 @@
                 Refresh
               </button>
             `;
-            document.getElementById('recipients').innerHTML = '<div style="color: #d93025; padding: 8px;">Error loading recipients</div>';
+            document.getElementById('recipientSummary').innerHTML = '<span style="color: #d93025;">Error loading recipients</span>';
           })
           .getSheetData();
       }
@@ -549,26 +561,13 @@
       }
 
       function displayRecipients(data) {
-        var recipientHtml = '';
-        data.rows.forEach(function(row, index) {
-          var initial = row[0].charAt(0).toUpperCase();
-          recipientHtml += `
-            <div class="recipient">
-              <div class="recipient-initial">${initial}</div>
-              <div class="recipient-info">
-                <div class="recipient-name">${row[0]}</div>
-                <div class="recipient-email">${row[1]}</div>
-              </div>
-              <div class="more-actions" onclick="removeRecipient(${index}, '${row[1]}')">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
-                </svg>
-              </div>
-            </div>
-          `;
-        });
-        document.getElementById('recipients').innerHTML = recipientHtml;
-        
+        var count = (data.rows || []).length;
+        var label = count === 1 ? 'recipient' : 'recipients';
+        var summary = count === 0
+          ? 'No recipients yet. Add rows and click Refresh.'
+          : `<b>${count}</b> ${label} loaded.`;
+        document.getElementById('recipientSummary').innerHTML = summary;
+
         // Display available variables using filtered headers
         var variablesHtml = data.displayHeaders.map(function(header) {
           return `<span class="variable-tag">{{${header}}}</span>`;
@@ -616,14 +615,18 @@
         google.script.run
           .withSuccessHandler(function(drafts) {
             var select = document.getElementById('templateSelect');
+            if (!drafts || drafts.length === 0) {
+              select.innerHTML = '<option value="">No Gmail drafts found — create a draft to use as a template</option>';
+              document.getElementById('status').innerHTML = '<div style="color: #5f6368;">Tip: Create a Gmail draft with variables like {{First Name}} and refresh.</div>';
+              return;
+            }
             select.innerHTML = '<option value="">Select an email template...</option>';
             drafts.forEach(function(draft) {
               var option = document.createElement('option');
               option.value = draft.id;
-              // Truncate long subject lines to ~30 characters
               var subject = draft.subject || '(no subject)';
               option.text = subject.length > 30 ? subject.substring(0, 27) + '...' : subject;
-              option.title = subject; // Show full text on hover
+              option.title = subject;
               select.appendChild(option);
             });
           })
