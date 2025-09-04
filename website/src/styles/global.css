@@ -57,7 +57,7 @@ body {
 .hero p { margin: 0 0 20px; color: var(--text-muted); font-size: 18px; line-height: 1.6; }
 .hero-bullets { margin: 0 0 20px; padding-left: 18px; color: var(--text-muted); }
 .hero-bullets li { margin: 6px 0; }
-.cta-row { display:flex; gap: 12px; }
+.cta-row { display:flex; gap: 12px; justify-content: flex-start; flex-wrap: wrap; }
 .button { display:inline-flex; align-items:center; gap:8px; height:40px; padding: 0 16px; border-radius: 8px; border:1px solid var(--border); color: var(--text); text-decoration:none; }
 .button:hover { background:#f8f9fa; }
 .button.primary { background: var(--primary); border-color: var(--primary); color: white; }
@@ -66,11 +66,24 @@ body {
 .cta-under { margin-top: 8px; }
 
 .section { padding: 40px 0; }
+.section-cards { border-top: 1px solid var(--border); }
+/* Add breathing room after the cards section so it doesn't crowd the next section */
+.section-cards { margin-bottom: 32px; }
+/* Add a little extra top space for the how section to visually separate */
+.section-how { padding-top: 56px; }
 .section h2 { 
   text-align: center; 
   margin-bottom: 12px; 
   font-size: 28px; 
   font-weight: 700; 
+}
+.eyebrow { 
+  text-transform: uppercase; 
+  letter-spacing: .08em; 
+  color: var(--text-muted); 
+  font-size: 12px; 
+  text-align: center; 
+  margin-bottom: 6px; 
 }
 .section-subtitle { 
   text-align: center; 
@@ -85,20 +98,18 @@ body {
 .grid.grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .card {
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 14px;
   padding: 28px 24px;
   background: #fff;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.04);
+  transition: transform 160ms ease, box-shadow 160ms ease;
 }
-.card.accent { position: relative; }
-.card.accent:before {
-  content: "";
-  position: absolute;
-  left: 0; top: 0; bottom: 0;
-  width: 4px;
-  background: var(--primary);
-  border-radius: 12px 0 0 12px;
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(0,0,0,0.06);
 }
+/* Remove heavy left accent bar for a lighter look */
+.card.accent:before { display: none; }
 .card h3 { 
   margin-top: 0; 
   margin-bottom: 12px; 
@@ -137,6 +148,8 @@ body {
   font-size: 14px;
   background: #fff;
 }
+
+.section-how { background: #fff; }
 .step-content h3 { 
   margin: 0 0 8px; 
   font-size: 20px; 
@@ -157,13 +170,33 @@ body {
 }
 .cta-section { 
   text-align: center; 
-  margin-top: 48px; 
+  margin-top: auto; 
+  margin-bottom: auto; 
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
 }
 .limits-note { 
-  margin-top: 16px; 
+  margin-top: 0; 
   color: var(--text-muted); 
   font-size: 14px; 
   font-weight: 500;
+}
+
+/* Add larger breathing room below the note, above the buttons */
+.cta-section .cta-row {
+  margin-top: 24px;
+}
+
+/* Larger buttons only within How it works CTA */
+.section-how .cta-row .button { height: 44px; padding: 0 18px; border-radius: 10px; }
+.section-how .cta-row { justify-content: center; }
+
+/* Ensure the CTA can center in the remaining vertical space */
+.section-how .container {
+  display: flex;
+  flex-direction: column;
+  min-height: 60vh;
 }
 .small { font-size: 13px; }
 

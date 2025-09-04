@@ -29,8 +29,9 @@ export default function Home(): JSX.Element {
         </div>
       </section>
 
-      <section className="section">
+      <section className="section section-cards">
         <div className="container">
+          <div className="eyebrow">Why OSMM</div>
           <h2>Built for nonprofits, clubs, and businesses</h2>
           <p className="section-subtitle">Use Gmail's sending limits to their fullest: 500/day (personal) • 2,000/day (Workspace).</p>
           <div className="grid grid-3">
@@ -52,8 +53,9 @@ export default function Home(): JSX.Element {
 
       {/** Consolidated to one set of cards; second section removed for clarity **/}
 
-      <section className="section">
+      <section className="section section-how">
         <div className="container">
+          <div className="eyebrow">How it works</div>
           <h2>Simple setup, powerful results</h2>
           <div className="how-it-works">
             <div className="step">
@@ -79,11 +81,11 @@ export default function Home(): JSX.Element {
             </div>
           </div>
           <div className="cta-section">
-            <div className="cta-row">
-              <a className="button primary" href="https://workspace.google.com/marketplace/search?q=Open%20Source%20Mail%20Merge" target="_blank" rel="noreferrer">Get the add‑on</a>
-              <a className="button" href="https://github.com/jdragon3001/Open-Source-Mail-Merge--OSMM-" target="_blank" rel="noreferrer">View on GitHub</a>
-            </div>
             <p className="limits-note">Respects Gmail's daily limits: 500 emails (personal accounts) • 2,000 emails (Workspace accounts)</p>
+            <div className="cta-row">
+              <a className="button primary" href="https://workspace.google.com/marketplace/search?q=Open%20Source%20Mail%20Merge" target="_blank" rel="noreferrer">Start Sending</a>
+              <a className="button" href="https://github.com/jdragon3001/Open-Source-Mail-Merge--OSMM-" target="_blank" rel="noreferrer">Source Code</a>
+            </div>
           </div>
         </div>
       </section>
