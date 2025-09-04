@@ -36,7 +36,10 @@ export default function Home(): React.ReactElement {
 
       <section className="section section-cards">
         <div className="container">
-          <div className="eyebrow">Why OSMM</div>
+          <div className="eyebrow">
+            Why OSMM?
+            <span className="pronounce" aria-label="Pronounced 'awesome'" title="Pronounced 'awesome'">(/ˈôsəm/)</span>
+          </div>
           <h2>Built for nonprofits, clubs, and businesses</h2>
           <p className="section-subtitle">Use Gmail's sending limits to their fullest: 500/day (personal) • 2,000/day (Workspace).</p>
           <div className="grid grid-3">

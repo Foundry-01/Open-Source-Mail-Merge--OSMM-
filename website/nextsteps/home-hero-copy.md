@@ -14,6 +14,7 @@
 - Edited hero paragraph to highlight free, easy‑to‑use, locally hosted value props and target audiences.
 - Fixed TS return type in `Home` component to `React.ReactElement` to satisfy linter.
 - Changed hero to single `h1` with `<br />` for second line: "No BCC, no problem".
+- Updated pronunciation easter egg to a clearer aside: "(/ aw·səm /)" with same tooltip.
 
 ### Next step
 - If we add more positioning, consider aligning bullets and CTA text with the updated messaging.
