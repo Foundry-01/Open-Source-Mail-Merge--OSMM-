@@ -12,6 +12,7 @@ export default function App(): JSX.Element {
           <Link to="/" className="brand">
             <img src="/logo.svg" alt="OSMM" className="brand-logo" />
             <span className="brand-name">Open Source Mail Merge</span>
+            <span className="brand-name-short">OSMM</span>
           </Link>
           <nav className="nav">
             <Link to="/" className="nav-link">Home</Link>

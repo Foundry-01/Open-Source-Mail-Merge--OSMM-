@@ -41,7 +41,8 @@ export default function Home(): React.ReactElement {
             <span className="pronounce" aria-label="Pronounced 'awesome'" title="Pronounced 'awesome'">(/ˈôsəm/)</span>
           </div>
           <h2>Built for nonprofits, clubs, and businesses</h2>
-          <p className="section-subtitle">Use Gmail's sending limits to their fullest: 500/day (personal) • 2,000/day (Workspace).</p>
+          <p className="section-subtitle subtitle-desktop">Use Gmail's sending limits to their fullest: 500/day (personal) • 2,000/day (Workspace).</p>
+          <p className="section-subtitle subtitle-mobile">500/day (personal) • 2,000/day (Workspace)</p>
           <div className="grid grid-3">
             <div className="card accent">
               <h3>Personalization that converts</h3>

@@ -39,6 +39,7 @@ body {
 .brand { display:flex; align-items:center; text-decoration:none; color:inherit; }
 .brand-logo { width: 28px; height: 28px; margin-right: 8px; }
 .brand-name { font-weight: 600; }
+.brand-name-short { display: none; font-weight: 700; }
 .nav { display:flex; gap: 16px; }
 .nav-link { color: var(--text-muted); text-decoration: none; }
 .nav-link:hover { color: var(--text); }
@@ -93,6 +94,8 @@ body {
   max-width: 600px;
   font-weight: 500;
 }
+.subtitle-mobile { display: none; }
+.subtitle-desktop { display: block; }
 .pronounce {
   margin-left: 6px;
   color: var(--text-muted);
@@ -235,7 +238,21 @@ body {
 
 @media (max-width: 800px) {
   .site-header .container { height: 56px; }
-  .hero { grid-template-columns: 1fr; min-height: auto; padding: 40px 0; }
+  .hero { grid-template-columns: 1fr; min-height: calc(100vh - 56px); padding: 56px 0; }
+  /* Mobile brand: show short name, hide long name and icon spacing */
+  .brand-logo { margin-right: 6px; width: 24px; height: 24px; }
+  .brand-name { display: none; }
+  .brand-name-short { display: inline; }
+  /* Trim hero copy on mobile */
+  .hero p { display: none; }
+  /* Slightly increase vertical rhythm within hero */
+  .hero h1 { margin: 0 0 18px; line-height: 1.28; }
+  .hero-bullets { margin: 0 0 24px; }
+  /* Hide hero illustration on mobile */
+  .hero-art { display: none; }
+  /* Mobile subtitle swap */
+  .subtitle-desktop { display: none; }
+  .subtitle-mobile { display: block; }
   .grid, .grid.grid-3 { grid-template-columns: 1fr; }
   .section { padding: 32px 0; }
   .section h2 { font-size: 24px; }

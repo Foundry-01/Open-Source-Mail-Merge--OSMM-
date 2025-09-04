@@ -15,6 +15,7 @@
 - Fixed TS return type in `Home` component to `React.ReactElement` to satisfy linter.
 - Changed hero to single `h1` with `<br />` for second line: "No BCC, no problem".
 - Updated pronunciation easter egg to a clearer aside: "(/ aw·səm /)" with same tooltip.
+- Mobile adjustments: hide hero paragraph and illustration; show short brand label "OSMM" at top-left on mobile via `.brand-name-short` and responsive CSS.
 
 ### Next step
 - If we add more positioning, consider aligning bullets and CTA text with the updated messaging.
