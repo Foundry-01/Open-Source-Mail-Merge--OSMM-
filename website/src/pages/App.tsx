@@ -16,7 +16,7 @@ export default function App(): JSX.Element {
           <nav className="nav">
             <Link to="/" className="nav-link">Home</Link>
             <Link to="/privacy" className="nav-link">Privacy</Link>
-            <Link to="/terms" className="nav-link">Terms</Link>
+            <a href="https://github.com/jdragon3001/Open-Source-Mail-Merge--OSMM-" className="nav-link" target="_blank" rel="noreferrer">Github</a>
           </nav>
         </div>
       </header>
@@ -30,6 +30,11 @@ export default function App(): JSX.Element {
       <footer className="site-footer">
         <div className="container small">
           <div>© {new Date().getFullYear()} OSMM • Open-source under Apache-2.0</div>
+          <div className="footer-links">
+            <Link to="/privacy" className="link">Privacy Policy</Link>
+            <span>•</span>
+            <Link to="/terms" className="link">Terms of Service</Link>
+          </div>
         </div>
       </footer>
     </div>
