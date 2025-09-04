@@ -1,18 +1,23 @@
 import React from 'react';
 
-export default function Home(): JSX.Element {
+export default function Home(): React.ReactElement {
   return (
     <>
       <section className="hero">
         <div className="hero-copy">
-          <h1>Personalized email at scale — no BCC, no fuss</h1>
+          <h1>
+            Personalized email at scale
+            <br />
+            No BCC, no problem
+          </h1>
           <p>
-            OSMM is a free Google Sheets add-on that sends individual, personalized emails
-            from your Gmail drafts. Perfect for marketing outreach, fundraising, and sales
-            lead generation — all inside your Google account.
+            OSMM is a free, easy‑to‑use Google Sheets add‑on for sending individual,
+            personalized emails from your Gmail drafts. It runs entirely in your own
+            Google account — no external servers or subscriptions. Ideal for clubs,
+            nonprofits, and small businesses that want a simple, zero‑cost mail merge.
           </p>
           <ul className="hero-bullets">
-            <li>Send one-to-one emails to large lists — no BCC</li>
+            <li>Send one-to-one emails to large lists without BCC</li>
             <li>Use variables like {'{{First Name}}'} from your Sheet</li>
             <li>Runs in your account — simple, safe, open-source</li>
           </ul>
