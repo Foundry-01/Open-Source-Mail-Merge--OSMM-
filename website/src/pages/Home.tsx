@@ -31,61 +31,60 @@ export default function Home(): JSX.Element {
 
       <section className="section">
         <div className="container">
-          <h2>Why OSMM?</h2>
-          <div className="grid">
-            <div className="card">
-              <h3>Personalization that performs</h3>
-              <p>Use Sheet columns as variables to tailor each subject and message. Better relevance, better replies.</p>
+          <h2>Built for nonprofits, clubs, and businesses</h2>
+          <p className="section-subtitle">Use Gmail's sending limits to their fullest: 500/day (personal) • 2,000/day (Workspace).</p>
+          <div className="grid grid-3">
+            <div className="card accent">
+              <h3>Personalization that converts</h3>
+              <p>Use Sheet columns as variables to customize each subject and message. Higher engagement and better response rates.</p>
             </div>
-            <div className="card">
-              <h3>No BCC — real conversations</h3>
-              <p>Every recipient gets an individual email thread from your account. Higher trust and response rates.</p>
+            <div className="card accent">
+              <h3>Individual conversations</h3>
+              <p>No BCC mass emails. Every recipient gets a personal thread from your account, building trust and encouraging replies.</p>
             </div>
-            <div className="card">
-              <h3>Private and simple</h3>
-              <p>Runs within your Google account using official APIs. No external servers or data exports.</p>
-            </div>
-            <div className="card">
-              <h3>Free and open-source</h3>
-              <p>Transparent code you control. Fork it, adapt it, or use it as-is.</p>
+            <div className="card accent">
+              <h3>Secure & cost‑effective</h3>
+              <p>Runs entirely within your Google account using official APIs. No monthly fees, external servers, or data exports required.</p>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="section alt">
-        <div className="container">
-          <h2>Common use-cases</h2>
-          <div className="grid">
-            <div className="card">
-              <h3>Sales outreach</h3>
-              <p>Personalized prospecting from a Sheet of leads. Start one-to-one conversations at scale.</p>
-            </div>
-            <div className="card">
-              <h3>Fundraising</h3>
-              <p>Thank donors, announce campaigns, and follow up with targeted, individualized messages.</p>
-            </div>
-            <div className="card">
-              <h3>Community & education</h3>
-              <p>Coordinate events, send updates, and keep communication personal without copy‑pasting.</p>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/** Consolidated to one set of cards; second section removed for clarity **/}
 
       <section className="section">
-        <div className="container how">
-          <h2>How it works</h2>
-          <ol className="steps">
-            <li><strong>Draft in Gmail</strong>: Write your message once and add variables like {'{{First Name}}'}.</li>
-            <li><strong>Prepare your Sheet</strong>: Add columns for Email Address and any variables.</li>
-            <li><strong>Send</strong>: Open the OSMM add-on in Sheets, select your draft, and send a test — then deliver to everyone.</li>
-          </ol>
-          <div className="cta-row">
-            <a className="button primary" href="https://github.com/jdragon3001/Open-Source-Mail-Merge--OSMM-" target="_blank" rel="noreferrer">Get started on GitHub</a>
-            <a className="button" href="/terms">Terms</a>
+        <div className="container">
+          <h2>Simple setup, powerful results</h2>
+          <div className="how-it-works">
+            <div className="step">
+              <div className="step-number">1</div>
+              <div className="step-content">
+                <h3>Draft in Gmail</h3>
+                <p>Write your message once and add variables like <code>{'{{First Name}}'}</code> or <code>{'{{Company}}'}</code>. Your template becomes the foundation for personalized outreach.</p>
+              </div>
+            </div>
+            <div className="step">
+              <div className="step-number">2</div>
+              <div className="step-content">
+                <h3>Prepare your Sheet</h3>
+                <p>Create columns for Email Address and any variables you used. Each row becomes a personalized email to that recipient.</p>
+              </div>
+            </div>
+            <div className="step">
+              <div className="step-number">3</div>
+              <div className="step-content">
+                <h3>Send & scale</h3>
+                <p>Open the OSMM add-on in Sheets, select your draft, send a test email first — then deliver to everyone on your list.</p>
+              </div>
+            </div>
           </div>
-          <p className="muted small">Subject to Gmail daily sending limits. Works with personal and Workspace accounts.</p>
+          <div className="cta-section">
+            <div className="cta-row">
+              <a className="button primary" href="https://workspace.google.com/marketplace/search?q=Open%20Source%20Mail%20Merge" target="_blank" rel="noreferrer">Get the add‑on</a>
+              <a className="button" href="https://github.com/jdragon3001/Open-Source-Mail-Merge--OSMM-" target="_blank" rel="noreferrer">View on GitHub</a>
+            </div>
+            <p className="limits-note">Respects Gmail's daily limits: 500 emails (personal accounts) • 2,000 emails (Workspace accounts)</p>
+          </div>
         </div>
       </section>
     </>
