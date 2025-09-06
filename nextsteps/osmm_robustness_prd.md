@@ -113,6 +113,9 @@
 - Logs contain no full data dumps.
 - Large sheets (e.g., 1000 rows) send in batches and can resume after timeouts without duplicates.
 
+### Running Notes
+- 2025-09-06: Implemented utilities (header normalization, address parsing, safe templating), updated `getSheetData` to use display values and SSOT detection, added BCC support and robust CC parsing, enhanced errors with sheet/row context, added batching/resume with `PropertiesService`, centralized sidebar asset resolver. No site changes.
+
 ### Implementation Plan (High-Level)
 1) Utilities module:
    - normalizeHeaderKey(key): string

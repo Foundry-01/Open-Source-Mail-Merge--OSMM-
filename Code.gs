@@ -24,80 +24,199 @@ function onHomepage(e) {
 }
 
 /**
+ * Utilities: header normalization, email parsing, safe templating, batching
+ */
+function normalizeHeaderKey(key) {
+  return String(key || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '');
+}
+
+function isEmailHeader(normalizedKey) {
+  // Accept listed aliases for "email"
+  var aliases = {
+    email: true,
+    emailaddress: true,
+    email_address: true, // kept for clarity; normalize removes non-alnum
+    email_address_alias: true // placeholder, not used
+  };
+  // Because we strip non-alnum, all dashes/underscores collapse
+  return !!({
+    email: true,
+    emailaddress: true,
+    emailaddressalias: true // no effect, safety
+  }[normalizedKey] || aliases[normalizedKey]);
+}
+
+function isCcHeader(normalizedKey) {
+  return normalizedKey === 'cc';
+}
+
+function isBccHeader(normalizedKey) {
+  return normalizedKey === 'bcc';
+}
+
+function escapeRegex(text) {
+  return String(text).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function extractEmailAddress(token) {
+  var s = String(token || '').trim();
+  // Prefer address inside angle brackets if present
+  var angleMatch = s.match(/<([^>]+)>/);
+  var addr = angleMatch ? angleMatch[1] : s;
+  addr = addr.trim().toLowerCase();
+  return addr;
+}
+
+function isLikelyValidEmail(addr) {
+  // Moderate validation suitable for Gmail; avoids over-rejection
+  return /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(String(addr || ''));
+}
+
+function parseAddressList(cellValue) {
+  var raw = String(cellValue || '');
+  if (!raw) return [];
+  var parts = raw.split(/[;,]/).map(function(p) { return p.trim(); }).filter(function(p) { return p; });
+  var seen = {};
+  var result = [];
+  parts.forEach(function(part) {
+    var addr = extractEmailAddress(part);
+    if (isLikelyValidEmail(addr) && !seen[addr]) {
+      seen[addr] = true;
+      result.push(addr);
+    }
+  });
+  return result;
+}
+
+function parsePrimaryAddress(cellValue) {
+  var list = parseAddressList(cellValue);
+  if (list.length === 0) {
+    throw new Error('No valid recipient email found');
+  }
+  if (list.length > 1) {
+    throw new Error('Multiple emails provided for primary recipient; please provide exactly one');
+  }
+  return list[0];
+}
+
+function buildPlaceholderOrder(headers) {
+  // Sort headers by descending length to avoid substring collisions
+  return headers.slice().sort(function(a, b) { return String(b).length - String(a).length; });
+}
+
+function replacePlaceholders(text, headers, rowValues) {
+  var ordered = buildPlaceholderOrder(headers);
+  var result = String(text || '');
+  ordered.forEach(function(header, index) {
+    var key = String(header || '');
+    var value = rowValues[index];
+    var stringValue = (value === 0 || value) ? String(value) : '';
+    var pattern = new RegExp('{{\\s*' + escapeRegex(key.toLowerCase()) + '\\s*}}', 'gi');
+    result = result.replace(pattern, stringValue);
+  });
+  return result;
+}
+
+var OSMM_BATCH_SIZE = 50;
+
+function getProgressKey(templateId) {
+  return 'osmm_progress_' + String(templateId || 'default');
+}
+
+function readProgress(templateId) {
+  var props = PropertiesService.getUserProperties();
+  var val = props.getProperty(getProgressKey(templateId));
+  return val ? parseInt(val, 10) : 0;
+}
+
+function writeProgress(templateId, index) {
+  var props = PropertiesService.getUserProperties();
+  props.setProperty(getProgressKey(templateId), String(index));
+}
+
+function clearProgress(templateId) {
+  var props = PropertiesService.getUserProperties();
+  props.deleteProperty(getProgressKey(templateId));
+}
+
+function resolveHtmlFile(possibleNames) {
+  for (var i = 0; i < possibleNames.length; i++) {
+    try {
+      return HtmlService.createHtmlOutputFromFile(possibleNames[i]);
+    } catch (error) {
+      if (!String(error && error.message || '').includes('No HTML file named')) {
+        throw error;
+      }
+    }
+  }
+  throw new Error('Could not find sidebar file. Please ensure either "Sidebar.html" or "sidebar.html" exists in your project.');
+}
+
+/**
  * Opens a sidebar in the document containing the add-on's user interface.
  */
 function showSidebar() {
-  // Try possible case variations
-  const possibleNames = ['Sidebar.html', 'sidebar.html'];
-  let html;
-  let success = false;
-
-  for (let fileName of possibleNames) {
-    try {
-      html = HtmlService.createHtmlOutputFromFile(fileName)
-        .setTitle(' ')
-        .setWidth(300);
-      success = true;
-      break;
-    } catch (error) {
-      if (!error.message.includes('No HTML file named')) {
-        throw error; // If it's a different error, throw it immediately
-      }
-      // Otherwise continue trying other cases
-    }
-  }
-
-  if (!success) {
-    throw new Error('Could not find sidebar file. Please ensure either "Sidebar.html" or "sidebar.html" exists in your project.');
-  }
-
+  var html = resolveHtmlFile(['Sidebar.html', 'sidebar.html'])
+    .setTitle(' ')
+    .setWidth(300);
   SpreadsheetApp.getUi().showSidebar(html);
 }
 
 function getSheetData() {
   var sheet = SpreadsheetApp.getActiveSheet();
+  var sheetName = sheet.getName();
   var dataRange = sheet.getDataRange();
-  var data = dataRange.getValues();
+  var displayData = dataRange.getDisplayValues();
 
-  Logger.log('Raw data from sheet:');
-  Logger.log(data);
-
-  // Find email column index and all cc column indices using strict matches
   var emailColumnIndex = -1;
   var ccColumnIndices = [];
+  var bccColumnIndices = [];
   var filteredHeaders = [];
+  var duplicateNonRecipientHeaders = [];
 
-  var headers = (data && data.length > 0) ? data[0] : [];
-
+  var headers = (displayData && displayData.length > 0) ? displayData[0] : [];
+  var seenNormalized = {};
+  
   headers.forEach(function(header, index) {
-    var headerLower = header.toString().trim().toLowerCase();
+    var headerStr = String(header || '').trim();
+    var normalized = normalizeHeaderKey(headerStr);
 
-    // Capture non-empty, non-cc headers for variable display
-    if (headerLower && headerLower !== 'cc' && headerLower !== 'bcc') {
-      filteredHeaders.push(header);
+    // Track duplicates (non-cc/bcc) for awareness; use first occurrence
+    if (normalized && seenNormalized[normalized] !== undefined && !isCcHeader(normalized) && !isBccHeader(normalized)) {
+      duplicateNonRecipientHeaders.push(headerStr + ' (duplicate at column ' + (index + 1) + ')');
+    } else if (normalized) {
+      seenNormalized[normalized] = index;
     }
 
-    if (headerLower === 'cc') {
+    // Variables displayed exclude cc/bcc
+    if (normalized && !isCcHeader(normalized) && !isBccHeader(normalized)) {
+      filteredHeaders.push(headerStr);
+    }
+
+    if (isCcHeader(normalized)) {
       ccColumnIndices.push(index);
       return;
     }
+    if (isBccHeader(normalized)) {
+      bccColumnIndices.push(index);
+      return;
+    }
 
-    // Strict matching only: exactly "email" or "email address"
-    if (emailColumnIndex === -1 && (headerLower === 'email' || headerLower === 'email address')) {
+    if (emailColumnIndex === -1 && (normalized === 'email' || normalized === 'emailaddress' || normalized === 'emailaddressalias')) {
       emailColumnIndex = index;
     }
   });
 
-  // Require a valid email header to proceed
   if (emailColumnIndex === -1) {
     var headerPreview = headers.map(function(h) { return '"' + String(h) + '"'; }).join(', ');
-    throw new Error('Email column not found. Add a header named exactly "Email" or "Email Address" (case-insensitive). Headers found: ' + headerPreview + '.');
+    throw new Error('Email column not found on sheet "' + sheetName + '". Add a header like "Email" or a supported variant. Headers found: ' + headerPreview + '.');
   }
 
-  // Build recipient rows only if we have a detected email column and at least one data row
   var rows = [];
-  if (data && data.length > 1) {
-    rows = data.slice(1).filter(function(row) {
+  if (displayData && displayData.length > 1) {
+    rows = displayData.slice(1).filter(function(row) {
       try {
         var emailCell = row[emailColumnIndex];
         return emailCell && String(emailCell).trim() !== '';
@@ -107,15 +226,17 @@ function getSheetData() {
     });
   }
 
-  Logger.log('Filtered rows:');
-  Logger.log(rows);
+  var preflightSummary = 'Sheet "' + sheetName + '" — recipients: ' + rows.length + ', cc cols: ' + ccColumnIndices.length + ', bcc cols: ' + bccColumnIndices.length + (duplicateNonRecipientHeaders.length ? (', duplicate headers: ' + duplicateNonRecipientHeaders.join('; ')) : '');
 
   return {
-    headers: headers, // original headers
+    sheetName: sheetName,
+    headers: headers,
     displayHeaders: filteredHeaders,
     rows: rows,
     emailColumnIndex: emailColumnIndex,
-    ccColumnIndices: ccColumnIndices
+    ccColumnIndices: ccColumnIndices,
+    bccColumnIndices: bccColumnIndices,
+    preflightSummary: preflightSummary
   };
 }
 
@@ -148,78 +269,87 @@ function sendMailMerge(templateId, senderName) {
   };
   
   var data = getSheetData();
-  var headers = data.headers.map(function(header) { return header.toLowerCase(); });
+  var headers = data.headers.map(function(header) { return String(header).toLowerCase(); });
   var rows = data.rows;
   var emailColumnIndex = data.emailColumnIndex;
   var ccColumnIndices = data.ccColumnIndices;
+  var bccColumnIndices = data.bccColumnIndices;
+  var sheetName = data.sheetName;
+
+  var startIndex = readProgress(templateId);
+  var endIndex = Math.min(rows.length, startIndex + OSMM_BATCH_SIZE);
+
   var sent = 0;
   var errors = [];
-  
-  rows.forEach(function(row, rowIndex) {
+
+  for (var i = startIndex; i < endIndex; i++) {
+    var row = rows[i];
     try {
-      var personalizedBody = template.body;
-      var personalizedSubject = template.subject;
-      
-      // Replace all variables in both subject and body
-      headers.forEach(function(header, index) {
-        var value = row[index];
-        var stringValue = (value === 0 || value) ? String(value) : '';
-        var regex = new RegExp('{{\\s*' + header + '\\s*}}', 'gi');
-        personalizedBody = personalizedBody.replace(regex, stringValue);
-        personalizedSubject = personalizedSubject.replace(regex, stringValue);
-      });
-      
-      // Get email from the email column and clean it
-      var email = String(row[emailColumnIndex]).toLowerCase().trim();
-      
-      // Get CC emails from all CC columns
+      var personalizedBody = replacePlaceholders(template.body, headers, row);
+      var personalizedSubject = replacePlaceholders(template.subject, headers, row);
+
+      var toAddress = parsePrimaryAddress(row[emailColumnIndex]);
+
+      var ccSet = {};
       var ccEmails = [];
       ccColumnIndices.forEach(function(ccIndex) {
-        var ccEmail = String(row[ccIndex] || '').toLowerCase().trim();
-        // Basic email validation for CC
-        if (ccEmail && ccEmail.includes('@') && ccEmail.slice(ccEmail.indexOf('@')).includes('.')) {
-          ccEmails.push(ccEmail);
-        }
+        var list = parseAddressList(row[ccIndex]);
+        list.forEach(function(addr) {
+          if (addr !== toAddress && !ccSet[addr]) {
+            ccSet[addr] = true;
+            ccEmails.push(addr);
+          }
+        });
       });
-      
+
+      var bccSet = {};
+      var bccEmails = [];
+      bccColumnIndices.forEach(function(bccIndex) {
+        var listB = parseAddressList(row[bccIndex]);
+        listB.forEach(function(addr) {
+          if (addr !== toAddress && !bccSet[addr]) {
+            bccSet[addr] = true;
+            bccEmails.push(addr);
+          }
+        });
+      });
+
       var options = {
         htmlBody: personalizedBody,
         name: senderName || 'Mail Merge'
       };
-      
-      // Add CC recipients if any valid emails were found
-      if (ccEmails.length > 0) {
-        options.cc = ccEmails.join(',');
-      }
-      
-      // Keep strict validation for primary email
-      if (!email.match(/^[^@\s]+@[^@\s]+\.[^@\s]+$/)) {
-        throw new Error('Invalid email format: ' + email);
-      }
-      
-      // Send the email
+      if (ccEmails.length > 0) options.cc = ccEmails.join(',');
+      if (bccEmails.length > 0) options.bcc = bccEmails.join(',');
+
       GmailApp.sendEmail(
-        email,
+        toAddress,
         personalizedSubject,
-        '',  // Plain text body (empty since we're sending HTML)
+        '',
         options
       );
       sent++;
-      
-      // Add small delay between sends
-      Utilities.sleep(500);
-      
+      Utilities.sleep(250);
     } catch (error) {
-      Logger.log('Failed to send email to ' + row[emailColumnIndex] + ': ' + error.toString());
-      errors.push('Error sending to ' + row[0] + ': ' + error.toString());
+      var rowNumber = i + 2; // 1-based with header row
+      var problematic = String(row[emailColumnIndex] || '');
+      var errMsg = 'Sheet \'' + sheetName + '\', row ' + rowNumber + ' (email=\'' + problematic + '\'): ' + error.toString();
+      Logger.log(errMsg);
+      errors.push(errMsg);
     }
-  });
-  
-  var message = sent + ' emails sent successfully';
-  if (errors.length > 0) {
-    message += '\n' + errors.join('\n');
   }
-  return message;
+
+  var finished = endIndex >= rows.length;
+  if (!finished) {
+    writeProgress(templateId, endIndex);
+  } else {
+    clearProgress(templateId);
+  }
+
+  var summary = (sent + ' emails sent in this run. ' + (finished ? 'All done.' : 'Resume needed to continue.')) + '\n' + data.preflightSummary;
+  if (errors.length > 0) {
+    summary += '\n' + errors.join('\n');
+  }
+  return summary;
 }
 
 function removeRecipient(index) {
@@ -253,21 +383,17 @@ function sendTestEmail(templateId, senderName, senderEmail) {
   };
   
   var data = getSheetData();
-  var headers = data.headers.map(function(header) { return header.toLowerCase(); });
+  var headers = data.headers.map(function(header) { return String(header).toLowerCase(); });
   var firstRow = data.rows[0] || [];
   
-  var personalizedBody = template.body;
-  var personalizedSubject = template.subject;
+  var personalizedBody = replacePlaceholders(template.body, headers, firstRow);
+  var personalizedSubject = replacePlaceholders(template.subject, headers, firstRow);
   
-  headers.forEach(function(header, index) {
-    var value = firstRow[index];
-    var stringValue = (value === 0 || value) ? String(value) : '';
-    var regex = new RegExp('{{\\s*' + header + '\\s*}}', 'gi');
-    personalizedBody = personalizedBody.replace(regex, stringValue);
-    personalizedSubject = personalizedSubject.replace(regex, stringValue);
-  });
-  
-  senderEmail = String(senderEmail).toLowerCase().trim();
+  try {
+    senderEmail = parsePrimaryAddress(senderEmail);
+  } catch (e) {
+    throw new Error('Invalid test recipient email: ' + e.message);
+  }
   
   try {
     // For test emails, we only send to the user without any CC
