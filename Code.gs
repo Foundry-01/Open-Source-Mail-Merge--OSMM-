@@ -284,35 +284,67 @@ function sendMailMerge(templateId, senderName) {
 
   for (var i = startIndex; i < endIndex; i++) {
     var row = rows[i];
+    var rowNumber = i + 2; // 1-based with header row
     try {
       var personalizedBody = replacePlaceholders(template.body, headers, row);
       var personalizedSubject = replacePlaceholders(template.subject, headers, row);
 
-      var toAddress = parsePrimaryAddress(row[emailColumnIndex]);
+      // Validate primary email with row-aware error
+      var toAddress;
+      try {
+        toAddress = parsePrimaryAddress(row[emailColumnIndex]);
+      } catch (e) {
+        var msgTo = 'Sheet \'' + sheetName + '\', row ' + rowNumber + ' (email=\'' + String(row[emailColumnIndex] || '') + '\'): ' + e.message;
+        Logger.log(msgTo);
+        errors.push(msgTo);
+        continue;
+      }
 
+      // CC/BCC parsing with per-token validation and warnings
       var ccSet = {};
       var ccEmails = [];
+      var ccInvalids = [];
       ccColumnIndices.forEach(function(ccIndex) {
-        var list = parseAddressList(row[ccIndex]);
-        list.forEach(function(addr) {
-          if (addr !== toAddress && !ccSet[addr]) {
-            ccSet[addr] = true;
-            ccEmails.push(addr);
+        var raw = String(row[ccIndex] || '');
+        var tokens = raw.split(/[;,]/).map(function(p) { return p.trim(); }).filter(function(p) { return p; });
+        tokens.forEach(function(tok) {
+          var addr = extractEmailAddress(tok);
+          if (isLikelyValidEmail(addr)) {
+            if (addr !== toAddress && !ccSet[addr]) {
+              ccSet[addr] = true;
+              ccEmails.push(addr);
+            }
+          } else {
+            ccInvalids.push(tok);
           }
         });
       });
 
       var bccSet = {};
       var bccEmails = [];
+      var bccInvalids = [];
       bccColumnIndices.forEach(function(bccIndex) {
-        var listB = parseAddressList(row[bccIndex]);
-        listB.forEach(function(addr) {
-          if (addr !== toAddress && !bccSet[addr]) {
-            bccSet[addr] = true;
-            bccEmails.push(addr);
+        var rawB = String(row[bccIndex] || '');
+        var tokensB = rawB.split(/[;,]/).map(function(p) { return p.trim(); }).filter(function(p) { return p; });
+        tokensB.forEach(function(tok) {
+          var addr = extractEmailAddress(tok);
+          if (isLikelyValidEmail(addr)) {
+            if (addr !== toAddress && !bccSet[addr]) {
+              bccSet[addr] = true;
+              bccEmails.push(addr);
+            }
+          } else {
+            bccInvalids.push(tok);
           }
         });
       });
+
+      // Warn about unresolved placeholders in subject/body
+      var unresolved = [];
+      var uBody = personalizedBody.match(/{{\s*[^}]+\s*}}/g) || [];
+      var uSubject = personalizedSubject.match(/{{\s*[^}]+\s*}}/g) || [];
+      if (uBody.length) unresolved = unresolved.concat(uBody);
+      if (uSubject.length) unresolved = unresolved.concat(uSubject);
 
       var options = {
         htmlBody: personalizedBody,
@@ -329,8 +361,27 @@ function sendMailMerge(templateId, senderName) {
       );
       sent++;
       Utilities.sleep(250);
+
+      // Row-level warnings appended to errors list for surfacing
+      if (ccInvalids.length) {
+        var warnCc = 'Sheet \'' + sheetName + '\', row ' + rowNumber + ': dropped invalid CC entries: ' + ccInvalids.join(', ');
+        Logger.log(warnCc);
+        errors.push(warnCc);
+      }
+      if (bccInvalids.length) {
+        var warnBcc = 'Sheet \'' + sheetName + '\', row ' + rowNumber + ': dropped invalid BCC entries: ' + bccInvalids.join(', ');
+        Logger.log(warnBcc);
+        errors.push(warnBcc);
+      }
+      if (unresolved.length) {
+        var seenPH = {};
+        unresolved.forEach(function(p) { seenPH[p] = true; });
+        var phList = Object.keys(seenPH);
+        var warnPh = 'Sheet \'' + sheetName + '\', row ' + rowNumber + ': unresolved placeholders: ' + phList.join(', ');
+        Logger.log(warnPh);
+        errors.push(warnPh);
+      }
     } catch (error) {
-      var rowNumber = i + 2; // 1-based with header row
       var problematic = String(row[emailColumnIndex] || '');
       var errMsg = 'Sheet \'' + sheetName + '\', row ' + rowNumber + ' (email=\'' + problematic + '\'): ' + error.toString();
       Logger.log(errMsg);
