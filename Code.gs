@@ -294,7 +294,8 @@ function sendMailMerge(templateId, senderName) {
       try {
         toAddress = parsePrimaryAddress(row[emailColumnIndex]);
       } catch (e) {
-        var msgTo = 'Sheet \'' + sheetName + '\', row ' + rowNumber + ' (email=\'' + String(row[emailColumnIndex] || '') + '\'): ' + e.message;
+        var emailHeaderName = String(data.headers[emailColumnIndex] || 'email');
+        var msgTo = emailHeaderName + ': Row ' + rowNumber + ' — ' + e.message + " (value: '" + String(row[emailColumnIndex] || '') + "')";
         Logger.log(msgTo);
         errors.push(msgTo);
         continue;
@@ -304,10 +305,12 @@ function sendMailMerge(templateId, senderName) {
       var ccSet = {};
       var ccEmails = [];
       var ccInvalids = [];
+      var ccRunningIndex = 0;
       ccColumnIndices.forEach(function(ccIndex) {
         var raw = String(row[ccIndex] || '');
         var tokens = raw.split(/[;,]/).map(function(p) { return p.trim(); }).filter(function(p) { return p; });
         tokens.forEach(function(tok) {
+          ccRunningIndex++;
           var addr = extractEmailAddress(tok);
           if (isLikelyValidEmail(addr)) {
             if (addr !== toAddress && !ccSet[addr]) {
@@ -315,7 +318,7 @@ function sendMailMerge(templateId, senderName) {
               ccEmails.push(addr);
             }
           } else {
-            ccInvalids.push(tok);
+            ccInvalids.push({ index: ccRunningIndex, token: tok });
           }
         });
       });
@@ -323,10 +326,12 @@ function sendMailMerge(templateId, senderName) {
       var bccSet = {};
       var bccEmails = [];
       var bccInvalids = [];
+      var bccRunningIndex = 0;
       bccColumnIndices.forEach(function(bccIndex) {
         var rawB = String(row[bccIndex] || '');
         var tokensB = rawB.split(/[;,]/).map(function(p) { return p.trim(); }).filter(function(p) { return p; });
         tokensB.forEach(function(tok) {
+          bccRunningIndex++;
           var addr = extractEmailAddress(tok);
           if (isLikelyValidEmail(addr)) {
             if (addr !== toAddress && !bccSet[addr]) {
@@ -334,7 +339,7 @@ function sendMailMerge(templateId, senderName) {
               bccEmails.push(addr);
             }
           } else {
-            bccInvalids.push(tok);
+            bccInvalids.push({ index: bccRunningIndex, token: tok });
           }
         });
       });
@@ -364,20 +369,24 @@ function sendMailMerge(templateId, senderName) {
 
       // Row-level warnings appended to errors list for surfacing
       if (ccInvalids.length) {
-        var warnCc = 'Sheet \'' + sheetName + '\', row ' + rowNumber + ': dropped invalid CC entries: ' + ccInvalids.join(', ');
-        Logger.log(warnCc);
-        errors.push(warnCc);
+        ccInvalids.forEach(function(item) {
+          var line = 'cc: Row ' + rowNumber + ' — Email ' + item.index + " invalid '" + item.token + "'";
+          Logger.log(line);
+          errors.push(line);
+        });
       }
       if (bccInvalids.length) {
-        var warnBcc = 'Sheet \'' + sheetName + '\', row ' + rowNumber + ': dropped invalid BCC entries: ' + bccInvalids.join(', ');
-        Logger.log(warnBcc);
-        errors.push(warnBcc);
+        bccInvalids.forEach(function(item) {
+          var lineB = 'bcc: Row ' + rowNumber + ' — Email ' + item.index + " invalid '" + item.token + "'";
+          Logger.log(lineB);
+          errors.push(lineB);
+        });
       }
       if (unresolved.length) {
         var seenPH = {};
         unresolved.forEach(function(p) { seenPH[p] = true; });
         var phList = Object.keys(seenPH);
-        var warnPh = 'Sheet \'' + sheetName + '\', row ' + rowNumber + ': unresolved placeholders: ' + phList.join(', ');
+        var warnPh = 'placeholders: Row ' + rowNumber + ' — unresolved ' + phList.join(', ');
         Logger.log(warnPh);
         errors.push(warnPh);
       }
@@ -396,9 +405,9 @@ function sendMailMerge(templateId, senderName) {
     clearProgress(templateId);
   }
 
-  var summary = (sent + ' emails sent in this run. ' + (finished ? 'All done.' : 'Resume needed to continue.')) + '\n' + data.preflightSummary;
+  var summary = (sent + ' emails sent in this run. ' + (finished ? '' : 'Resume needed to continue.'));
   if (errors.length > 0) {
-    summary += '\n' + errors.join('\n');
+    summary += '\nErrors (' + errors.length + '):\n' + errors.join('\n');
   }
   return summary;
 }
