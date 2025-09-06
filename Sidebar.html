@@ -733,7 +733,16 @@
 
               const sub = document.createElement('span');
               sub.style.color = '#5f6368';
-              sub.textContent = errorsCount > 0 ? (errorsCount + ' issue' + (errorsCount > 1 ? 's' : '')) : (doneNote || '');
+              // Treat zero sent as an error state even if no explicit error list came back
+              if (sentCount === 0) {
+                sub.textContent = errorsCount > 0
+                  ? (errorsCount + ' issue' + (errorsCount > 1 ? 's' : '') + ' found. Fix the cells below and click Refresh.')
+                  : 'No emails were sent. Check the Email column header and addresses, then click Refresh.';
+              } else {
+                sub.textContent = errorsCount > 0
+                  ? (errorsCount + ' issue' + (errorsCount > 1 ? 's' : '') + ' (some messages sent).')
+                  : (doneNote || 'All done.');
+              }
 
               header.appendChild(badge);
               header.appendChild(sub);
@@ -775,48 +784,21 @@
                 statusDiv.appendChild(list);
               }
 
+              // If zero sent and no explicit errors, show quick tips
+              if (sentCount === 0 && errorsCount === 0) {
+                const tips = document.createElement('ul');
+                tips.style.margin = '8px 0 0 16px';
+                tips.style.padding = '0';
+                const t1 = document.createElement('li'); t1.style.fontSize = '12px'; t1.textContent = 'Ensure the Email header is present (e.g., Email, Email Address).';
+                const t2 = document.createElement('li'); t2.style.fontSize = '12px'; t2.textContent = 'Each Email cell must contain exactly one valid address (name@example.com).';
+                const t3 = document.createElement('li'); t3.style.fontSize = '12px'; t3.textContent = 'If using display names, use Name <name@example.com>.';
+                tips.appendChild(t1); tips.appendChild(t2); tips.appendChild(t3);
+                statusDiv.appendChild(tips);
+              }
+
               // Refresh button
               const btn = document.createElement('button');
               btn.className = 'refresh-button';
               btn.style.marginTop = '8px';
               btn.onclick = refreshData;
               btn.innerHTML = `
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
-                </svg>
-                Refresh`;
-              statusDiv.appendChild(btn);
-            }
-
-            renderSendResult(result);
-          })
-          .withFailureHandler(function(error) {
-            // On failure, update status div with error message and refresh button
-            const statusDiv = document.getElementById('status');
-            statusDiv.innerHTML = '<div style="color: #dc3545;">No emails were sent. Please check your recipient list and try again.</div>';
-            console.error("Email sending failed:", error); // Log the actual error
-            // Append the refresh button
-            statusDiv.innerHTML += `
-              <button onclick="refreshData()" class="refresh-button" style="margin-top: 8px;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
-                </svg>
-                Refresh
-              </button>`;
-          })
-          .sendMailMerge(templateId, senderName);
-      }
-
-      // New function to handle Enter key press
-      function handleEnter(event) {
-        if (event.keyCode === 13) { // 13 is the key code for Enter
-          event.preventDefault(); // Prevent default form submission if applicable
-          // Check if the load button is not already disabled
-          if (!document.getElementById('loadButton').disabled) {
-            loadData();
-          }
-        }
-      }
-    </script>
-  </body>
-</html> 
