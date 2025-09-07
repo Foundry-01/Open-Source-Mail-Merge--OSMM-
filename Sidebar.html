@@ -430,7 +430,9 @@
 
       <!-- Footer Links - Moved outside recipientList -->
       <div class="footer-links" style="margin-top: 16px;">
-        <a href="#" onclick="google.script.run.showPrivacyPolicy(); return false;">Privacy Policy</a>
+        <a href="https://osmailmerge.com/privacy" target="_blank" rel="noopener">Privacy Policy</a>
+        &nbsp;•&nbsp;
+        <a href="https://osmailmerge.com/terms" target="_blank" rel="noopener">Terms</a>
       </div>
     </div>
 
@@ -467,9 +469,15 @@
             loadDraftTemplates();
           })
           .withFailureHandler(function(error) {
-            // Keep UI usable with friendly guidance
+            // Show explicit error (e.g., duplicate headers) and keep UI usable
+            const loadButton = document.getElementById('loadButton');
+            loadButton.innerHTML = 'Recipients & Templates Loaded';
+            loadButton.style.opacity = '0.5';
+            loadButton.style.cursor = 'default';
+            loadButton.disabled = true;
+
             recipientList.style.display = 'block';
-            document.getElementById('recipientSummary').innerHTML = 'Add a header named <b>Email</b> or <b>Email Address</b> and at least one row, then click Refresh.';
+            document.getElementById('recipientSummary').innerHTML = '<span style="color:#d93025;">' + String(error) + '</span>';
             document.getElementById('status').innerHTML = `
               <button onclick="refreshData()" class="refresh-button">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
@@ -550,7 +558,7 @@
                 Refresh
               </button>
             `;
-            document.getElementById('recipientSummary').innerHTML = '<span style="color: #d93025;">Error loading recipients</span>';
+            document.getElementById('recipientSummary').innerHTML = '<span style="color: #d93025;">' + String(error) + '</span>';
           })
           .getSheetData();
       }
@@ -663,7 +671,23 @@
             // Then send the test email
             google.script.run
               .withSuccessHandler(function(result) {
-                handleSuccess(result);
+                const statusDiv = document.getElementById('status');
+                statusDiv.innerHTML = '';
+                const ok = document.createElement('div');
+                ok.style.color = '#137333';
+                ok.textContent = (typeof result === 'string' && result) || 'Test email sent successfully.';
+                statusDiv.appendChild(ok);
+                // Add refresh button
+                const btn = document.createElement('button');
+                btn.className = 'refresh-button';
+                btn.style.marginTop = '8px';
+                btn.onclick = refreshData;
+                btn.innerHTML = `
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+                  </svg>
+                  Refresh`;
+                statusDiv.appendChild(btn);
               })
               .withFailureHandler(function(error) {
                 document.getElementById('status').innerHTML = '<div style="color: #d93025;">Error: ' + error + '</div>';

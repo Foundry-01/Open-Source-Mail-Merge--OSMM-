@@ -17,7 +17,10 @@ function onHomepage(e) {
       .setText("Send personalized emails using Gmail drafts as templates. Create dynamic emails with variables from your spreadsheet."))
     .addWidget(CardService.newTextButton()
       .setText('Privacy Policy')
-      .setOnClickAction(CardService.newAction().setFunctionName('showPrivacyPolicy')));
+      .setOpenLink(CardService.newOpenLink().setUrl('https://osmailmerge.com/privacy')))
+    .addWidget(CardService.newTextButton()
+      .setText('Terms of Service')
+      .setOpenLink(CardService.newOpenLink().setUrl('https://osmailmerge.com/terms')));
   
   builder.addSection(section);
   return builder.build();
@@ -209,6 +212,19 @@ function getSheetData() {
     }
   });
 
+  // Recompute display headers to exclude email, cc, and bcc columns
+  filteredHeaders = headers.filter(function(h, idx) {
+    if (idx === emailColumnIndex) return false;
+    if (ccColumnIndices.indexOf(idx) !== -1) return false;
+    if (bccColumnIndices.indexOf(idx) !== -1) return false;
+    return String(h || '').trim() !== '';
+  });
+
+  // Enforce: duplicate headers are not allowed (except cc/bcc which are additive)
+  if (duplicateNonRecipientHeaders.length > 0) {
+    throw new Error('Duplicate headers not allowed (except cc/bcc): ' + duplicateNonRecipientHeaders.join('; '));
+  }
+
   if (emailColumnIndex === -1) {
     var headerPreview = headers.map(function(h) { return '"' + String(h) + '"'; }).join(', ');
     throw new Error('Email column not found on sheet "' + sheetName + '". Add a header like "Email" or a supported variant. Headers found: ' + headerPreview + '.');
@@ -285,6 +301,7 @@ function sendMailMerge(templateId, senderName) {
   for (var i = startIndex; i < endIndex; i++) {
     var row = rows[i];
     var rowNumber = i + 2; // 1-based with header row
+    var rowHasError = false;
     try {
       var personalizedBody = replacePlaceholders(template.body, headers, row);
       var personalizedSubject = replacePlaceholders(template.subject, headers, row);
@@ -298,7 +315,8 @@ function sendMailMerge(templateId, senderName) {
         var msgTo = emailHeaderName + ': Row ' + rowNumber + ' — ' + e.message + " (value: '" + String(row[emailColumnIndex] || '') + "')";
         Logger.log(msgTo);
         errors.push(msgTo);
-        continue;
+        rowHasError = true; // don't continue; still validate CC/BCC
+        toAddress = '';
       }
 
       // CC/BCC parsing with per-token validation and warnings
@@ -319,6 +337,7 @@ function sendMailMerge(templateId, senderName) {
             }
           } else {
             ccInvalids.push({ index: ccRunningIndex, token: tok });
+            rowHasError = true;
           }
         });
       });
@@ -340,6 +359,7 @@ function sendMailMerge(templateId, senderName) {
             }
           } else {
             bccInvalids.push({ index: bccRunningIndex, token: tok });
+            rowHasError = true;
           }
         });
       });
@@ -357,15 +377,6 @@ function sendMailMerge(templateId, senderName) {
       };
       if (ccEmails.length > 0) options.cc = ccEmails.join(',');
       if (bccEmails.length > 0) options.bcc = bccEmails.join(',');
-
-      GmailApp.sendEmail(
-        toAddress,
-        personalizedSubject,
-        '',
-        options
-      );
-      sent++;
-      Utilities.sleep(250);
 
       // Row-level warnings appended to errors list for surfacing
       if (ccInvalids.length) {
@@ -390,9 +401,21 @@ function sendMailMerge(templateId, senderName) {
         Logger.log(warnPh);
         errors.push(warnPh);
       }
+
+      // Only send if there are no errors for this row
+      if (!rowHasError) {
+        GmailApp.sendEmail(
+          toAddress,
+          personalizedSubject,
+          '',
+          options
+        );
+        sent++;
+        Utilities.sleep(250);
+      }
     } catch (error) {
       var problematic = String(row[emailColumnIndex] || '');
-      var errMsg = 'Sheet \'' + sheetName + '\', row ' + rowNumber + ' (email=\'' + problematic + '\'): ' + error.toString();
+      var errMsg = 'email: Row ' + rowNumber + " — " + error.toString() + " (value: '" + problematic + "')";
       Logger.log(errMsg);
       errors.push(errMsg);
     }
@@ -443,11 +466,19 @@ function sendTestEmail(templateId, senderName, senderEmail) {
   };
   
   var data = getSheetData();
-  var headers = data.headers.map(function(header) { return String(header).toLowerCase(); });
-  var firstRow = data.rows[0] || [];
+  // Build headers/row excluding recipient columns for templating in test mode
+  var headers = [];
+  var rowForTemplate = [];
+  for (var h = 0; h < data.headers.length; h++) {
+    if (h === data.emailColumnIndex) continue;
+    if (data.ccColumnIndices.indexOf(h) !== -1) continue;
+    if (data.bccColumnIndices.indexOf(h) !== -1) continue;
+    headers.push(String(data.headers[h]).toLowerCase());
+    rowForTemplate.push((data.rows[0] || [])[h]);
+  }
   
-  var personalizedBody = replacePlaceholders(template.body, headers, firstRow);
-  var personalizedSubject = replacePlaceholders(template.subject, headers, firstRow);
+  var personalizedBody = replacePlaceholders(template.body, headers, rowForTemplate);
+  var personalizedSubject = replacePlaceholders(template.subject, headers, rowForTemplate);
   
   try {
     senderEmail = parsePrimaryAddress(senderEmail);
@@ -485,115 +516,7 @@ function getUserEmail() {
  * Shows the privacy policy in a modal dialog
  */
 function showPrivacyPolicy() {
-  var html = HtmlService.createHtmlOutput(`
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Privacy Policy - Open Source Mail Merge</title>
-        <style>
-            body {
-                font-family: 'Google Sans', Arial, sans-serif;
-                line-height: 1.6;
-                margin: 0;
-                padding: 20px;
-                color: #202124;
-            }
-            h1 {
-                color: #1a73e8;
-                font-size: 2em;
-                margin-bottom: 1em;
-            }
-            h2 {
-                color: #202124;
-                font-size: 1.5em;
-                margin-top: 1.5em;
-            }
-            p {
-                margin-bottom: 1em;
-            }
-            ul {
-                margin-bottom: 1em;
-                padding-left: 20px;
-            }
-            li {
-                margin-bottom: 0.5em;
-            }
-            .last-updated {
-                color: #5f6368;
-                font-style: italic;
-                margin-top: 2em;
-            }
-            a {
-                color: #1a73e8;
-                text-decoration: none;
-            }
-            a:hover {
-                text-decoration: underline;
-            }
-        </style>
-    </head>
-    <body>
-        <h1>Privacy Policy for Open Source Mail Merge</h1>
-
-        <p>This Privacy Policy describes how Open Source Mail Merge ("we", "our", or "the add-on") handles information when you use our Google Workspace Add-on.</p>
-
-        <h2>Information We Access</h2>
-        <p>Our add-on requires access to:</p>
-        <ul>
-            <li>Google Sheets: To read recipient information from your spreadsheet</li>
-            <li>Gmail: To access your draft emails and send personalized emails</li>
-            <li>Your email address: To send test emails and identify you as the sender</li>
-        </ul>
-
-        <h2>How We Use Your Information</h2>
-        <p>The add-on uses your information solely to:</p>
-        <ul>
-            <li>Read recipient data from your active spreadsheet</li>
-            <li>Access your Gmail drafts to use as email templates</li>
-            <li>Send personalized emails to your recipients</li>
-            <li>Send test emails to your account</li>
-        </ul>
-
-        <h2>Data Storage and Retention</h2>
-        <p>Open Source Mail Merge:</p>
-        <ul>
-            <li>Does not store any of your data outside of your Google Workspace account</li>
-            <li>Does not collect or retain any personal information</li>
-            <li>Does not share or transmit your data to any third parties</li>
-            <li>Only processes data during active use of the add-on</li>
-        </ul>
-
-        <h2>Data Security</h2>
-        <p>We prioritize the security of your data by:</p>
-        <ul>
-            <li>Operating entirely within Google's secure infrastructure</li>
-            <li>Using only official Google APIs for all operations</li>
-            <li>Not storing or transmitting data to external servers</li>
-            <li>Requiring explicit user authorization for all permissions</li>
-        </ul>
-
-        <h2>Your Rights</h2>
-        <p>You have the right to:</p>
-        <ul>
-            <li>Know what data the add-on accesses</li>
-            <li>Revoke the add-on's access to your Google account at any time</li>
-            <li>Request information about how your data is used</li>
-        </ul>
-
-        <h2>Changes to This Policy</h2>
-        <p>We may update this Privacy Policy from time to time. We will notify users of any material changes through the Google Workspace Marketplace listing.</p>
-
-        <h2>Contact Us</h2>
-        <p>If you have any questions about this Privacy Policy or our data practices, please contact us at <a href="mailto:contact@binaryheart.org">contact@binaryheart.org</a>.</p>
-
-        <p class="last-updated">Last updated: March 2024</p>
-    </body>
-    </html>
-  `)
-    .setWidth(600)
-    .setHeight(600);
-  
-  SpreadsheetApp.getUi().showModalDialog(html, 'Privacy Policy');
-} 
+  var link = CardService.newOpenLink().setUrl('https://osmailmerge.com/privacy');
+  var action = CardService.newActionResponseBuilder().setOpenLink(link).build();
+  return action;
+}
