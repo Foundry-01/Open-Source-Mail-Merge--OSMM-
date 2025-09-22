@@ -3,6 +3,7 @@ import { Routes, Route, Link } from 'react-router-dom';
 import Home from './Home';
 import Privacy from './Privacy';
 import Terms from './Terms';
+import PostInstall from './PostInstall';
 
 export default function App(): JSX.Element {
   return (
@@ -16,6 +17,7 @@ export default function App(): JSX.Element {
           </Link>
           <nav className="nav">
             <Link to="/" className="nav-link">Home</Link>
+            <Link to="/post-install" className="nav-link">Post Install</Link>
             <Link to="/privacy" className="nav-link">Privacy</Link>
             <a href="https://github.com/jdragon3001/Open-Source-Mail-Merge--OSMM-" className="nav-link" target="_blank" rel="noreferrer">Github</a>
           </nav>
@@ -26,11 +28,12 @@ export default function App(): JSX.Element {
           <Route path="/" element={<Home />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
+          <Route path="/post-install" element={<PostInstall />} />
         </Routes>
       </main>
       <footer className="site-footer">
         <div className="container small">
-          <div>© {new Date().getFullYear()} OSMM • Open-source under Apache-2.0</div>
+          <div>© {new Date().getFullYear()} OSMM • Open-source under MIT</div>
           <div className="footer-links">
             <Link to="/privacy" className="link">Privacy Policy</Link>
             <span>•</span>

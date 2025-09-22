@@ -10,6 +10,9 @@ npm run build
 
 # Preview production build locally
 npm run preview
+
+# Open Post Install page during dev
+xdg-open http://localhost:5173/post-install || open http://localhost:5173/post-install || true
 ```
 
 ## Production Deployment Commands

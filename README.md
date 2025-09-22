@@ -200,3 +200,7 @@ If the menu doesn't appear:
   - Send emails on your behalf
   - Read and modify the current spreadsheet
 
+## License
+
+This project is open-source under the MIT License. See the `LICENSE` file at the repository root for full text.
+
