@@ -158,6 +158,17 @@ function resolveHtmlFile(possibleNames) {
 }
 
 /**
+ * Adds the OSMM menu when the Sheet is opened. This is the entry point for
+ * personal installs (script bound to a Sheet), where onHomepage never fires.
+ */
+function onOpen(e) {
+  SpreadsheetApp.getUi()
+    .createMenu('OSMM')
+    .addItem('Open Mail Merge', 'showSidebar')
+    .addToUi();
+}
+
+/**
  * Opens a sidebar in the document containing the add-on's user interface.
  */
 function showSidebar() {

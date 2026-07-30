@@ -4,6 +4,7 @@ import Home from './Home';
 import Privacy from './Privacy';
 import Terms from './Terms';
 import PostInstall from './PostInstall';
+import Install from './Install';
 
 export default function App(): JSX.Element {
   return (
@@ -17,6 +18,7 @@ export default function App(): JSX.Element {
           </Link>
           <nav className="nav">
             <Link to="/" className="nav-link">Home</Link>
+            <Link to="/install" className="nav-link">Install</Link>
             <Link to="/post-install" className="nav-link">Post Install</Link>
             <Link to="/privacy" className="nav-link">Privacy</Link>
             <a href="https://github.com/jdragon3001/Open-Source-Mail-Merge--OSMM-" className="nav-link" target="_blank" rel="noreferrer">Github</a>
@@ -28,6 +30,7 @@ export default function App(): JSX.Element {
           <Route path="/" element={<Home />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
+          <Route path="/install" element={<Install />} />
           <Route path="/post-install" element={<PostInstall />} />
         </Routes>
       </main>

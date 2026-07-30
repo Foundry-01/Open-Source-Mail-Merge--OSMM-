@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 export default function Home(): React.ReactElement {
   return (
@@ -22,7 +23,7 @@ export default function Home(): React.ReactElement {
             <li>Runs in your account — simple, safe, open-source</li>
           </ul>
           <div className="cta-row">
-            <a className="button primary" href="https://workspace.google.com/marketplace/search?q=Open%20Source%20Mail%20Merge" target="_blank" rel="noreferrer">Get the add‑on</a>
+            <Link className="button primary" to="/install">How to install</Link>
             <a className="button" href="https://github.com/jdragon3001/Open-Source-Mail-Merge--OSMM-" target="_blank" rel="noreferrer">Get the code</a>
           </div>
           <div className="cta-under">
@@ -92,7 +93,7 @@ export default function Home(): React.ReactElement {
           <div className="cta-section">
             <p className="limits-note">Respects Gmail's daily limits: 500 emails (personal accounts) • 2,000 emails (Workspace accounts)</p>
             <div className="cta-row">
-              <a className="button primary" href="https://workspace.google.com/marketplace/search?q=Open%20Source%20Mail%20Merge" target="_blank" rel="noreferrer">Start Sending</a>
+              <Link className="button primary" to="/install">How to install</Link>
               <a className="button" href="https://github.com/jdragon3001/Open-Source-Mail-Merge--OSMM-" target="_blank" rel="noreferrer">Source Code</a>
             </div>
           </div>

@@ -6,7 +6,7 @@ export default function PostInstall(): JSX.Element {
     <DocPage
       title="Post Install: Using OSMM"
       toc={[
-        { id: 'open-addon', label: '1. Open the Add‑on in Sheets' },
+        { id: 'open-addon', label: '1. Open OSMM in Sheets' },
         { id: 'prepare-sheet', label: '2. Prepare Your Sheet' },
         { id: 'create-draft', label: '3. Create a Gmail Draft Template' },
         { id: 'load-and-test', label: '4. Load Recipients & Send a Test' },
@@ -18,9 +18,10 @@ export default function PostInstall(): JSX.Element {
     >
       <p className="muted">A quick guide to using Open Source Mail Merge after installation.</p>
 
-      <h2 id="open-addon">1. Open the Add‑on in Sheets</h2>
+      <h2 id="open-addon">1. Open OSMM in Sheets</h2>
       <p>
-        Open your Google Sheet, refresh the page, and look for the OSMM icon in the right‑hand sidebar. Click it to open the add‑on.
+        Open your Google Sheet, refresh the page, then choose <strong>OSMM → Open Mail Merge</strong> from the menu bar.
+        Haven't set it up yet? Start with the <a className="link" href="/install">install guide</a>.
       </p>
 
       <h2 id="prepare-sheet">2. Prepare Your Sheet</h2>
